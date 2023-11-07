@@ -347,6 +347,22 @@ pub trait CryptoClient: PollClient {
         })
     }
 
+    fn decrypt_pqc<'c>(&'c mut self, mechanism: Mechanism, key: &[u8],
+        message: &[u8], associated_data: &[u8],
+        nonce: &[u8], tag: &[u8],
+        )
+        -> ClientResult<'c, reply::DecryptPQC, Self>
+    {
+        let message = Message::from_slice(message).map_err(|_| ClientError::DataTooLarge)?;
+        let associated_data = Message::from_slice(associated_data).map_err(|_| ClientError::DataTooLarge)?;
+        let nonce = ShortData::from_slice(nonce).map_err(|_| ClientError::DataTooLarge)?;
+        let tag = ShortData::from_slice(tag).map_err(|_| ClientError::DataTooLarge)?;
+        let key = Message::from_slice(key).map_err(|_| ClientError::DataTooLarge)?;
+        let r = self.request(request::DecryptPQC { mechanism, key, message, associated_data, nonce, tag })?;
+        r.client.syscall();
+        Ok(r)
+    }
+
     /// Clear private data from the key
     ///
     /// This will not delete all metadata from storage.
@@ -564,6 +580,29 @@ pub trait CryptoClient: PollClient {
             associated_data,
         })
     }
+
+    fn wrap_key_pqc(&mut self, mechanism: Mechanism, wrapping_key: &[u8], key: KeyId,
+        associated_data: &[u8])
+    -> ClientResult<'_, reply::WrapKey, Self>
+    {
+        let associated_data = Message::from_slice(associated_data).map_err(|_| ClientError::DataTooLarge)?;
+        let wrapping_key = Message::from_slice(wrapping_key).map_err(|_| ClientError::DataTooLarge)?;
+        let r = self.request(request::WrapKeyPQC { mechanism, wrapping_key, key, associated_data })?;
+        r.client.syscall();
+        Ok(r)
+    }
+
+    fn wrap_key_pqc2(&mut self, mechanism: Mechanism, wrapping_key: KeyId, key: &[u8],
+        associated_data: &[u8])
+    -> ClientResult<'_, reply::WrapKeyPQC2, Self>
+    {
+        let associated_data = Message::from_slice(associated_data).map_err(|_| ClientError::DataTooLarge)?;
+        let key = MessagePQ::from_slice(key).map_err(|_| ClientError::DataTooLarge)?;
+        let r = self.request(request::WrapKeyPQC2 { mechanism, wrapping_key, key, associated_data })?;
+        r.client.syscall();
+        Ok(r)
+    }
+
 }
 
 /// Create counters, increment existing counters.
@@ -679,6 +718,14 @@ pub trait FilesystemClient: PollClient {
         })
     }
 
+    fn read_file_pqc(&mut self, location: Location, path: PathBuf)
+        -> ClientResult<'_, reply::ReadFilePQC, Self>
+    {
+        let r = self.request(request::ReadFilePQC { location, path } )?;
+        r.client.syscall();
+        Ok(r)
+    }
+
     fn write_file(
         &mut self,
         location: Location,
@@ -693,6 +740,24 @@ pub trait FilesystemClient: PollClient {
             user_attribute,
         })
     }
+
+    fn write_file_pqc(
+        &mut self,
+        location: Location,
+        path: PathBuf,
+        data: MessagePQ,
+        user_attribute: Option<UserAttribute>,
+        )
+        -> ClientResult<'_, reply::WriteFilePQC, Self>
+    {
+        let r = self.request(request::WriteFilePQC {
+            location, path, data,
+            user_attribute,
+        } )?;
+        r.client.syscall();
+        Ok(r)
+    }
+
 }
 
 /// All the other methods that are fit to expose.

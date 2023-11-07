@@ -54,6 +54,12 @@ rpc_trait! {
     Verify, verify,
     // TODO: can the default implementation be implemented in terms of Encrypt?
     WrapKey, wrap_key,
+    WrapKeyPQC, wrap_key_pqc,
+    EncryptPQC, encrypt_pqc,
+    DecryptPQC, decrypt_pqc,
+    WrapKeyPQC2, wrap_key_pqc2,
+    EncryptPQC2, encrypt_pqc2,
+    DecryptPQC2, decrypt_pqc2,
 }
 
 pub struct ServiceResources<P>
@@ -190,6 +196,24 @@ impl<P: Platform> ServiceResources<P> {
                 }.map(Reply::Decrypt)
             },
 
+            Request::DecryptPQC(request) => {
+                match request.mechanism {
+
+                    Mechanism::Aes256Cbc => mechanisms::Aes256Cbc::decrypt_pqc(keystore, request),
+                    _ => Err(Error::MechanismNotAvailable),
+
+                }.map(Reply::DecryptPQC)
+            },
+
+            Request::DecryptPQC2(request) => {
+                match request.mechanism {
+
+                    Mechanism::Chacha8Poly1305 => mechanisms::Chacha8Poly1305::decrypt_pqc2(keystore, request),
+                    _ => Err(Error::MechanismNotAvailable),
+
+                }.map(Reply::DecryptPQC2)
+            },
+
             Request::DeriveKey(request) => {
                 match request.mechanism {
 
@@ -226,6 +250,24 @@ impl<P: Platform> ServiceResources<P> {
                     _ => Err(Error::MechanismNotAvailable),
 
                 }.map(Reply::Encrypt)
+            },
+
+            Request::EncryptPQC(request) => {
+                match request.mechanism {
+
+                    Mechanism::Aes256Cbc => mechanisms::Aes256Cbc::encrypt_pqc(keystore, request),
+                    _ => Err(Error::MechanismNotAvailable),
+
+                }.map(Reply::EncryptPQC)
+            },
+
+            Request::EncryptPQC2(request) => {
+                match request.mechanism {
+
+                    Mechanism::Chacha8Poly1305 => mechanisms::Chacha8Poly1305::encrypt_pqc2(keystore, request),
+                    _ => Err(Error::MechanismNotAvailable),
+
+                }.map(Reply::EncryptPQC2)
             },
 
             Request::Delete(request) => {
@@ -456,6 +498,13 @@ impl<P: Platform> ServiceResources<P> {
                 }))
             }
 
+            Request::ReadFilePQC(request) => {
+                debug_now!("in readfilePQC");
+                Ok(Reply::ReadFilePQC(reply::ReadFilePQC {
+                    data: filestore.read(&request.path, request.location)?
+                }))
+            }
+
             Request::RandomBytes(request) => {
                 if request.count <= MAX_MESSAGE_LENGTH {
                     let mut bytes = Message::new();
@@ -500,6 +549,12 @@ impl<P: Platform> ServiceResources<P> {
                 Ok(Reply::WriteFile(reply::WriteFile {} ))
             }
 
+            Request::WriteFilePQC(request) => {
+                debug_now!("in writefilePQC");
+                filestore.write(&request.path, request.location, &request.data)?;
+                Ok(Reply::WriteFilePQC(reply::WriteFilePQC {} ))
+            }
+
             Request::UnwrapKey(request) => {
                 match request.mechanism {
 
@@ -527,6 +582,24 @@ impl<P: Platform> ServiceResources<P> {
                     _ => Err(Error::MechanismNotAvailable),
 
                 }.map(Reply::WrapKey)
+            },
+
+            Request::WrapKeyPQC(request) => {
+                match request.mechanism {
+
+                    Mechanism::Aes256Cbc => mechanisms::Aes256Cbc::wrap_key_pqc(keystore, request),
+                     _ => Err(Error::MechanismNotAvailable),
+
+                }.map(Reply::WrapKeyPQC)
+            },
+
+            Request::WrapKeyPQC2(request) => {
+                match request.mechanism {
+
+                    Mechanism::Chacha8Poly1305 => mechanisms::Chacha8Poly1305::wrap_key_pqc2(keystore, request),
+                     _ => Err(Error::MechanismNotAvailable),
+
+                }.map(Reply::WrapKeyPQC2)
             },
 
             Request::RequestUserConsent(request) => {

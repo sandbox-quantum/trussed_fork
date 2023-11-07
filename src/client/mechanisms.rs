@@ -18,6 +18,20 @@ pub trait Aes256Cbc: CryptoClient {
         key: KeyId,
     ) -> ClientResult<'_, reply::WrapKey, Self> {
         self.wrap_key(Mechanism::Aes256Cbc, wrapping_key, key, &[])
+    }    
+
+    fn decrypt_aes256cbc_pqc<'c>(&'c mut self, key: &[u8], message: &[u8])
+    -> ClientResult<'c, reply::DecryptPQC, Self>
+    {
+        self.decrypt_pqc(
+            Mechanism::Aes256Cbc, key, message, &[], &[], &[],
+        )
+    }
+
+    fn wrap_key_aes256cbc_pqc(&mut self, wrapping_key: &[u8], key: KeyId)
+        -> ClientResult<'_, reply::WrapKey, Self>
+    {
+        self.wrap_key_pqc(Mechanism::Aes256Cbc, wrapping_key, key, &[])
     }
 }
 
@@ -97,6 +111,13 @@ pub trait Chacha8Poly1305: CryptoClient {
             key,
             associated_data,
         )
+    }
+
+    fn wrap_pqc_key_chacha8poly1305<'c>(&'c mut self, wrapping_key: KeyId, key: &[u8],
+                        associated_data: &[u8])
+        -> ClientResult<'c, reply::WrapKeyPQC2, Self>
+    {
+        self.wrap_key_pqc2(Mechanism::Chacha8Poly1305, wrapping_key, key, associated_data)
     }
 }
 

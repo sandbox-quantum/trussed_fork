@@ -91,6 +91,90 @@ impl WrapKey for super::Aes256Cbc {
 
         Ok(reply::WrapKey { wrapped_key })
     }
+}    
+
+#[cfg(feature = "aes256-cbc")]
+impl EncryptPQC for super::Aes256Cbc
+{
+    /// Encrypts the input *with zero IV*
+    fn encrypt_pqc(_keystore: &mut impl Keystore, request: &request::EncryptPQC)
+        -> Result<reply::EncryptPQC, Error>
+    {
+		use block_modes::{BlockMode, Cbc};
+		// use block_modes::Cbc;
+		use block_modes::block_padding::ZeroPadding;
+		use aes::Aes256;
+
+        // TODO: perhaps use NoPadding and have client pad, to emphasize spec-conformance?
+        type Aes256Cbc = Cbc<Aes256, ZeroPadding>;
+
+        let symmetric_key: [u8; 32] = {
+            let bytes_data: &[u8] = &request.key;
+            // Check if the length of bytes_data matches the expected size
+            if bytes_data.len() != 32 {
+                debug_now!("Symmetric length is not 32. It is {:?}", bytes_data.len());
+            }
+            // assert_eq!(bytes_data.len(), 32, "Expected length is not 32");
+            // Convert the slice to a fixed-size array
+            let mut array = [0u8; 32];
+            array.copy_from_slice(bytes_data);
+            array
+        };
+
+        let zero_iv = [0u8; 16];
+		let cipher = Aes256Cbc::new_from_slices(&symmetric_key, &zero_iv).unwrap();
+
+		// buffer must have enough space for message+padding
+		let mut buffer = request.message.clone();
+		// // copy message to the buffer
+		// let pos = plaintext.len();
+		// buffer[..pos].copy_from_slice(plaintext);
+        let l = buffer.len();
+        // hprintln!(" aes256cbc encrypting l = {}B: {:?}", l, &buffer).ok();
+
+        // Encrypt message in-place.
+        // &buffer[..pos] is used as a message and &buffer[pos..] as a reserved space for padding.
+        // The padding space should be big enough for padding, otherwise method will return Err(BlockModeError).
+		let ciphertext = cipher.encrypt(&mut buffer, l).unwrap();
+
+        let ciphertext = Message::from_slice(&ciphertext).unwrap();
+        Ok(reply::EncryptPQC { ciphertext, nonce: ShortData::new(), tag: ShortData::new()  })
+    }
+}
+
+#[cfg(feature = "aes256-cbc")]
+impl WrapKey for super::Aes256Cbc
+{
+    fn wrap_key(keystore: &mut impl Keystore, request: &request::WrapKey)
+        -> Result<reply::WrapKey, Error>
+    {
+        // TODO: need to check both secret and private keys
+        // let path = keystore.key_path(key::Secrecy::Secret, &request.key)?;
+        // let (serialized_key, _location) = keystore.load_key_unchecked(&path)?;
+
+        // let message: Message = serialized_key.material.try_to_byte_buf().map_err(|_| Error::InternalError)?;
+
+        let message = Message::from_slice(
+            keystore
+                .load_key(key::Secrecy::Secret, None, &request.key)?
+                .material
+                .as_slice(),
+        )
+        .map_err(|_| Error::InternalError)?;
+
+        let encryption_request = request::Encrypt {
+            mechanism: Mechanism::Aes256Cbc,
+            key: request.wrapping_key,
+            message,
+            associated_data: request.associated_data.clone(),
+            nonce: None,
+        };
+        let encryption_reply = <super::Aes256Cbc>::encrypt(keystore, &encryption_request)?;
+
+        let wrapped_key = encryption_reply.ciphertext;
+
+        Ok(reply::WrapKey { wrapped_key })
+    }
 }
 
 #[cfg(feature = "aes256-cbc")]
@@ -101,6 +185,84 @@ impl Decrypt for super::Aes256Cbc {
     ) -> Result<reply::Decrypt, Error> {
         use aes::Aes256;
         use cbc::cipher::{block_padding::ZeroPadding, BlockDecryptMut, KeyIvInit};
+
+        // TODO: perhaps use NoPadding and have client pad, to emphasize spec-conformance?
+        type Aes256CbcDec = cbc::Decryptor<Aes256>;
+
+        let key_id = request.key;
+        let key = keystore.load_key(key::Secrecy::Secret, None, &key_id)?;
+        if !matches!(key.kind, key::Kind::Symmetric(AES256_KEY_SIZE)) {
+            return Err(Error::WrongKeyKind);
+        }
+
+        let symmetric_key: [u8; AES256_KEY_SIZE] = key
+            .material
+            .as_slice()
+            .try_into()
+            .map_err(|_| Error::InternalError)?;
+
+        let zero_iv = [0u8; 16];
+        let cipher = Aes256CbcDec::new_from_slices(&symmetric_key, &zero_iv).unwrap();
+
+        // buffer must have enough space for message+padding
+        let mut buffer = request.message.clone();
+        // // copy message to the buffer
+        // let pos = plaintext.len();
+        // buffer[..pos].copy_from_slice(plaintext);
+        // let l = buffer.len();
+
+        // Decrypt message in-place.
+        // Returns an error if buffer length is not multiple of block size and
+        // if after decoding message has malformed padding.
+        // hprintln!("encrypted: {:?}", &buffer).ok();
+        // hprintln!("symmetric key: {:?}", &symmetric_key).ok();
+        let plaintext = cipher
+            .decrypt_padded_mut::<ZeroPadding>(&mut buffer)
+            .unwrap();
+        // hprintln!("decrypted: {:?}", &plaintext).ok();
+        let plaintext = Message::from_slice(plaintext).unwrap();
+
+        Ok(reply::Decrypt {
+            plaintext: Some(plaintext),
+        })
+    }
+}
+
+#[cfg(feature = "aes256-cbc")]
+impl WrapKeyPQC for super::Aes256Cbc
+{
+    fn wrap_key_pqc(keystore: &mut impl Keystore, request: &request::WrapKeyPQC)
+        -> Result<reply::WrapKeyPQC, Error>
+    {
+        let message = Message::from_slice(keystore
+            .load_key(key::Secrecy::Secret, None, &request.key)?
+            .material.as_slice()).map_err(|_| Error::InternalError)?;
+
+        let encryption_request = request::EncryptPQC {
+            mechanism: Mechanism::Aes256Cbc,
+            key: request.wrapping_key.clone(),
+            message,
+            associated_data: ShortData::new(),
+            nonce: None,
+        };
+        let encryption_reply = <super::Aes256Cbc>::encrypt_pqc(keystore, &encryption_request)?;
+
+        let wrapped_key = encryption_reply.ciphertext;
+
+        Ok(reply::WrapKeyPQC { wrapped_key })
+    }
+}
+
+#[cfg(feature = "aes256-cbc")]
+impl Decrypt for super::Aes256Cbc
+{
+    fn decrypt(keystore: &mut impl Keystore, request: &request::Decrypt)
+        -> Result<reply::Decrypt, Error>
+    {
+		use block_modes::{BlockMode, Cbc};
+		// use block_modes::Cbc;
+		use block_modes::block_padding::ZeroPadding;
+		use aes::Aes256;
 
         // TODO: perhaps use NoPadding and have client pad, to emphasize spec-conformance?
         type Aes256CbcDec = cbc::Decryptor<Aes256>;
@@ -162,6 +324,58 @@ impl UnsafeInjectKey for super::Aes256Cbc {
         )?;
 
         Ok(reply::UnsafeInjectKey { key: key_id })
+    }
+}
+
+#[cfg(feature = "aes256-cbc")]
+impl DecryptPQC for super::Aes256Cbc
+{
+    fn decrypt_pqc(_keystore: &mut impl Keystore, request: &request::DecryptPQC)
+        -> Result<reply::DecryptPQC, Error>
+    {
+		use block_modes::{BlockMode, Cbc};
+		// use block_modes::Cbc;
+		use block_modes::block_padding::ZeroPadding;
+		use aes::Aes256;
+
+        // TODO: perhaps use NoPadding and have client pad, to emphasize spec-conformance?
+        type Aes256Cbc = Cbc<Aes256, ZeroPadding>;
+
+        // let key_id = request.key;
+
+        let symmetric_key: [u8; 32] = {
+            let bytes_data: &[u8] = &request.key;
+            // Check if the length of bytes_data matches the expected size
+            if bytes_data.len() != 32 {
+                debug_now!("Symmetric length is not 32. It is {:?}", bytes_data.len());
+            }
+            // assert_eq!(bytes_data.len(), 32, "Expected length is not 32");
+            // Convert the slice to a fixed-size array
+            let mut array = [0u8; 32];
+            array.copy_from_slice(bytes_data);
+            array
+        };
+
+        let zero_iv = [0u8; 16];
+		let cipher = Aes256Cbc::new_from_slices(&symmetric_key, &zero_iv).unwrap();
+
+		// buffer must have enough space for message+padding
+		let mut buffer = request.message.clone();
+		// // copy message to the buffer
+		// let pos = plaintext.len();
+		// buffer[..pos].copy_from_slice(plaintext);
+        // let l = buffer.len();
+
+        // Decrypt message in-place.
+        // Returns an error if buffer length is not multiple of block size and
+        // if after decoding message has malformed padding.
+        // hprintln!("encrypted: {:?}", &buffer).ok();
+        // hprintln!("symmetric key: {:?}", &symmetric_key).ok();
+		let plaintext = cipher.decrypt(&mut buffer).unwrap();
+        // hprintln!("decrypted: {:?}", &plaintext).ok();
+        let plaintext = Message::from_slice(&plaintext).unwrap();
+
+        Ok(reply::DecryptPQC { plaintext: Some(plaintext) })
     }
 }
 

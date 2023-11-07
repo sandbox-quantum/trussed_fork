@@ -59,7 +59,14 @@ generate_enums! {
     UnwrapKey: 22
     Verify: 23
     WrapKey: 24
-
+    WriteFilePQC: 25
+    ReadFilePQC: 26
+    WrapKeyPQC: 27
+    EncryptPQC: 28
+    DecryptPQC:30
+    WrapKeyPQC2: 31
+    EncryptPQC2: 32
+    DecryptPQC2: 33
     Attest: 0xFF
 
     /////////////
@@ -152,6 +159,22 @@ pub mod request {
           - nonce: ShortData
           - tag: ShortData
 
+        DecryptPQC:
+          - mechanism: Mechanism
+          - key: Message
+          - message: Message
+          - associated_data: Message
+          - nonce: ShortData
+          - tag: ShortData
+
+        DecryptPQC2:
+          - mechanism: Mechanism
+          - key: KeyId
+          - message: MessagePQ
+          - associated_data: Message
+          - nonce: ShortData
+          - tag: ShortData
+
         Delete:
           - key: KeyId
 
@@ -193,6 +216,22 @@ pub mod request {
           - mechanism: Mechanism
           - key: KeyId
           - message: Message
+          - associated_data: ShortData
+          - nonce: Option<ShortData>
+
+        // For PQ KEM in CTAP
+        EncryptPQC:
+          - mechanism: Mechanism
+          - key: Message
+          - message: Message
+          - associated_data: ShortData
+          - nonce: Option<ShortData>
+
+        // For non-resident PQ webauthn
+        EncryptPQC2:
+          - mechanism: Mechanism
+          - key: KeyId
+          - message: MessagePQ
           - associated_data: ShortData
           - nonce: Option<ShortData>
 
@@ -255,6 +294,10 @@ pub mod request {
           - location: Location
           - path: PathBuf
 
+        ReadFilePQC:
+          - location: Location
+          - path: PathBuf
+
         RemoveFile:
           - location: Location
           - path: PathBuf
@@ -290,6 +333,12 @@ pub mod request {
           - path: PathBuf
           - data: Message
           - user_attribute: Option<UserAttribute>
+        
+        WriteFilePQC:
+          - location: Location
+          - path: PathBuf
+          - data: MessagePQ
+          - user_attribute: Option<UserAttribute>
 
         UnsafeInjectKey:
           - mechanism: Mechanism        // -> implies key type
@@ -321,6 +370,20 @@ pub mod request {
           - wrapping_key: KeyId
           - key: KeyId
           - associated_data: ShortData
+
+        // this is used for PQC KEM
+        WrapKeyPQC:
+          - mechanism: Mechanism
+          - wrapping_key: Message
+          - key: KeyId
+          - associated_data: Message
+
+        // this is used for non-resident PQC in Webauthn
+        WrapKeyPQC2:
+          - mechanism: Mechanism
+          - wrapping_key: KeyId
+          - key: MessagePQ
+          - associated_data: Message
 
         RequestUserConsent:
           - level: consent::Level
@@ -388,6 +451,13 @@ pub mod reply {
         Decrypt:
             - plaintext: Option<Message>
 
+        DecryptPQC:
+            - plaintext: Option<Message>
+
+        
+        DecryptPQC2:
+            - plaintext: Option<MessagePQ>
+
         Delete:
             - success: bool
 
@@ -409,6 +479,16 @@ pub mod reply {
 
         Encrypt:
             - ciphertext: Message
+            - nonce: ShortData
+            - tag: ShortData
+
+        EncryptPQC:
+            - ciphertext: Message
+            - nonce: ShortData
+            - tag: ShortData
+
+        EncryptPQC2:
+            - ciphertext: MessagePQ
             - nonce: ShortData
             - tag: ShortData
 
@@ -449,6 +529,9 @@ pub mod reply {
         Metadata:
           - metadata: Option<crate::types::Metadata>
 
+        ReadFilePQC:
+          - data: MessagePQ
+
         RemoveDir:
 
         RemoveDirAll:
@@ -470,6 +553,8 @@ pub mod reply {
 
         WriteFile:
 
+        WriteFilePQC:
+
         Verify:
             - valid: bool
 
@@ -484,6 +569,13 @@ pub mod reply {
 
         WrapKey:
             - wrapped_key: Message
+
+        WrapKeyPQC:
+          - wrapped_key: Message
+
+
+        WrapKeyPQC2:
+          - wrapped_key: MessagePQ
 
         // UI
         RequestUserConsent:
