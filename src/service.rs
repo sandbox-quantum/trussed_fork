@@ -199,7 +199,7 @@ impl<P: Platform> ServiceResources<P> {
             Request::DecryptPQC(request) => {
                 match request.mechanism {
 
-                    Mechanism::Aes256Cbc => mechanisms::Aes256Cbc::decrypt_pqc(keystore, request),
+                    Mechanism::Aes256Cbc => mechanisms::Aes256Cbc::decrypt_pqc(&mut keystore(self, ctx)?, request),
                     _ => Err(Error::MechanismNotAvailable),
 
                 }.map(Reply::DecryptPQC)
@@ -208,7 +208,7 @@ impl<P: Platform> ServiceResources<P> {
             Request::DecryptPQC2(request) => {
                 match request.mechanism {
 
-                    Mechanism::Chacha8Poly1305 => mechanisms::Chacha8Poly1305::decrypt_pqc2(keystore, request),
+                    Mechanism::Chacha8Poly1305 => mechanisms::Chacha8Poly1305::decrypt_pqc2(&mut keystore(self, ctx)?, request),
                     _ => Err(Error::MechanismNotAvailable),
 
                 }.map(Reply::DecryptPQC2)
@@ -255,7 +255,7 @@ impl<P: Platform> ServiceResources<P> {
             Request::EncryptPQC(request) => {
                 match request.mechanism {
 
-                    Mechanism::Aes256Cbc => mechanisms::Aes256Cbc::encrypt_pqc(keystore, request),
+                    Mechanism::Aes256Cbc => mechanisms::Aes256Cbc::encrypt_pqc(&mut keystore(self, ctx)?, request),
                     _ => Err(Error::MechanismNotAvailable),
 
                 }.map(Reply::EncryptPQC)
@@ -264,7 +264,7 @@ impl<P: Platform> ServiceResources<P> {
             Request::EncryptPQC2(request) => {
                 match request.mechanism {
 
-                    Mechanism::Chacha8Poly1305 => mechanisms::Chacha8Poly1305::encrypt_pqc2(keystore, request),
+                    Mechanism::Chacha8Poly1305 => mechanisms::Chacha8Poly1305::encrypt_pqc2(&mut keystore(self, ctx)?, request),
                     _ => Err(Error::MechanismNotAvailable),
 
                 }.map(Reply::EncryptPQC2)
@@ -587,7 +587,7 @@ impl<P: Platform> ServiceResources<P> {
             Request::WrapKeyPQC(request) => {
                 match request.mechanism {
 
-                    Mechanism::Aes256Cbc => mechanisms::Aes256Cbc::wrap_key_pqc(keystore, request),
+                    Mechanism::Aes256Cbc => mechanisms::Aes256Cbc::wrap_key_pqc(&mut keystore(self, ctx)?, request),
                      _ => Err(Error::MechanismNotAvailable),
 
                 }.map(Reply::WrapKeyPQC)
@@ -596,7 +596,7 @@ impl<P: Platform> ServiceResources<P> {
             Request::WrapKeyPQC2(request) => {
                 match request.mechanism {
 
-                    Mechanism::Chacha8Poly1305 => mechanisms::Chacha8Poly1305::wrap_key_pqc2(keystore, request),
+                    Mechanism::Chacha8Poly1305 => mechanisms::Chacha8Poly1305::wrap_key_pqc2(&mut keystore(self, ctx)?, request),
                      _ => Err(Error::MechanismNotAvailable),
 
                 }.map(Reply::WrapKeyPQC2)
