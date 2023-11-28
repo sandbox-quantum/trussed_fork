@@ -101,7 +101,7 @@ impl EncryptPQC for super::Aes256Cbc
         -> Result<reply::EncryptPQC, Error>
     {
         use aes::Aes256;
-        use cbc::cipher::KeyIvInit;
+        use cbc::cipher::{block_padding::ZeroPadding, BlockEncryptMut, KeyIvInit};
 
         type Aes256CbcEnc = cbc::Encryptor<Aes256>;
 
@@ -132,7 +132,9 @@ impl EncryptPQC for super::Aes256Cbc
         // Encrypt message in-place.
         // &buffer[..pos] is used as a message and &buffer[pos..] as a reserved space for padding.
         // The padding space should be big enough for padding, otherwise method will return Err(BlockModeError).
-		let ciphertext = cipher.encrypt(&mut buffer, l).unwrap();
+        let ciphertext = cipher
+            .encrypt_padded_mut::<ZeroPadding>(&mut buffer, l)
+            .unwrap();
 
         let ciphertext = Message::from_slice(&ciphertext).unwrap();
         Ok(reply::EncryptPQC { ciphertext, nonce: ShortData::new(), tag: ShortData::new()  })
@@ -243,7 +245,7 @@ impl DecryptPQC for super::Aes256Cbc
         -> Result<reply::DecryptPQC, Error>
     {
         use aes::Aes256;
-        use cbc::cipher::KeyIvInit;
+	use cbc::cipher::{block_padding::ZeroPadding, BlockDecryptMut, KeyIvInit};
 
         // TODO: perhaps use NoPadding and have client pad, to emphasize spec-conformance?
         type Aes256CbcDec = cbc::Decryptor<Aes256>;
@@ -278,7 +280,9 @@ impl DecryptPQC for super::Aes256Cbc
         // if after decoding message has malformed padding.
         // hprintln!("encrypted: {:?}", &buffer).ok();
         // hprintln!("symmetric key: {:?}", &symmetric_key).ok();
-		let plaintext = cipher.decrypt(&mut buffer).unwrap();
+        let plaintext = cipher
+            .decrypt_padded_mut::<ZeroPadding>(&mut buffer)
+            .unwrap();
         // hprintln!("decrypted: {:?}", &plaintext).ok();
         let plaintext = Message::from_slice(&plaintext).unwrap();
 

@@ -171,19 +171,20 @@ impl DecryptPQC2 for super::Chacha8Poly1305
     fn decrypt_pqc2(keystore: &mut impl Keystore, request: &request::DecryptPQC2)
         -> Result<reply::DecryptPQC2, Error>
     {
+        use chacha20poly1305::aead::{AeadMutInPlace, KeyInit};
         use chacha20poly1305::ChaCha8Poly1305;
-        use chacha20poly1305::aead::{AeadInPlace};
 
-        let serialized_material = keystore
-            .load_key(key::Secrecy::Secret, Some(key::Kind::Symmetric32Nonce(12)), &request.key)?
-            .material;
-        let serialized = serialized_material.as_slice();
+        let key = keystore.load_key(key::Secrecy::Secret, None, &request.key)?;
+        if !matches!(key.kind, KIND | KIND_NONCE) {
+            return Err(Error::WrongKeyKind);
+        }
+        let serialized = key.material.as_slice();
 
-        assert!(serialized.len() == 44);
+        assert!(serialized.len() == TOTAL_LEN || serialized.len() == KEY_LEN);
 
-        let symmetric_key = &serialized[..32];
+        let symmetric_key = &serialized[..KEY_LEN];
 
-        let aead = ChaCha8Poly1305::new(&GenericArray::clone_from_slice(&symmetric_key));
+        let mut aead = ChaCha8Poly1305::new(&GenericArray::clone_from_slice(symmetric_key));
 
         let mut plaintext = request.message.clone();
         let nonce = GenericArray::from_slice(&request.nonce);
@@ -211,7 +212,7 @@ impl EncryptPQC2 for super::Chacha8Poly1305
         -> Result<reply::EncryptPQC2, Error>
     {
         use chacha20poly1305::ChaCha8Poly1305;
-        use chacha20poly1305::aead::{AeadInPlace};
+        use chacha20poly1305::aead::{AeadInPlace, KeyInit};
 
 
         // load key and nonce

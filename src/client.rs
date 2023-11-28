@@ -359,7 +359,6 @@ pub trait CryptoClient: PollClient {
         let tag = ShortData::from_slice(tag).map_err(|_| ClientError::DataTooLarge)?;
         let key = Message::from_slice(key).map_err(|_| ClientError::DataTooLarge)?;
         let r = self.request(request::DecryptPQC { mechanism, key, message, associated_data, nonce, tag })?;
-        r.client.syscall();
         Ok(r)
     }
 
@@ -583,13 +582,11 @@ pub trait CryptoClient: PollClient {
 
     fn wrap_key_pqc(&mut self, mechanism: Mechanism, wrapping_key: &[u8], key: KeyId,
         associated_data: &[u8])
-    -> ClientResult<'_, reply::WrapKey, Self>
+    -> ClientResult<'_, reply::WrapKeyPQC, Self>
     {
         let associated_data = Message::from_slice(associated_data).map_err(|_| ClientError::DataTooLarge)?;
         let wrapping_key = Message::from_slice(wrapping_key).map_err(|_| ClientError::DataTooLarge)?;
-        let r = self.request(request::WrapKeyPQC { mechanism, wrapping_key, key, associated_data })?;
-        r.client.syscall();
-        Ok(r)
+	self.request(request::WrapKeyPQC { mechanism, wrapping_key, key, associated_data })
     }
 
     fn wrap_key_pqc2(&mut self, mechanism: Mechanism, wrapping_key: KeyId, key: &[u8],
@@ -599,7 +596,6 @@ pub trait CryptoClient: PollClient {
         let associated_data = Message::from_slice(associated_data).map_err(|_| ClientError::DataTooLarge)?;
         let key = MessagePQ::from_slice(key).map_err(|_| ClientError::DataTooLarge)?;
         let r = self.request(request::WrapKeyPQC2 { mechanism, wrapping_key, key, associated_data })?;
-        r.client.syscall();
         Ok(r)
     }
 
@@ -722,7 +718,6 @@ pub trait FilesystemClient: PollClient {
         -> ClientResult<'_, reply::ReadFilePQC, Self>
     {
         let r = self.request(request::ReadFilePQC { location, path } )?;
-        r.client.syscall();
         Ok(r)
     }
 
@@ -754,7 +749,6 @@ pub trait FilesystemClient: PollClient {
             location, path, data,
             user_attribute,
         } )?;
-        r.client.syscall();
         Ok(r)
     }
 

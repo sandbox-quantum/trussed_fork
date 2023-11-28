@@ -29,7 +29,7 @@ pub trait Aes256Cbc: CryptoClient {
     }
 
     fn wrap_key_aes256cbc_pqc(&mut self, wrapping_key: &[u8], key: KeyId)
-        -> ClientResult<'_, reply::WrapKey, Self>
+        -> ClientResult<'_, reply::WrapKeyPQC, Self>
     {
         self.wrap_key_pqc(Mechanism::Aes256Cbc, wrapping_key, key, &[])
     }
