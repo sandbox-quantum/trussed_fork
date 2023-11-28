@@ -172,7 +172,7 @@ impl DecryptPQC2 for super::Chacha8Poly1305
         -> Result<reply::DecryptPQC2, Error>
     {
         use chacha20poly1305::ChaCha8Poly1305;
-        use chacha20poly1305::aead::{AeadInPlace, NewAead};
+        use chacha20poly1305::aead::{AeadInPlace};
 
         let serialized_material = keystore
             .load_key(key::Secrecy::Secret, Some(key::Kind::Symmetric32Nonce(12)), &request.key)?
@@ -204,69 +204,6 @@ impl DecryptPQC2 for super::Chacha8Poly1305
 
 
 #[cfg(feature = "chacha8-poly1305")]
-impl Encrypt for super::Chacha8Poly1305
-{
-    #[inline(never)]
-    fn encrypt(
-        keystore: &mut impl Keystore,
-        request: &request::Encrypt,
-    ) -> Result<reply::Encrypt, Error> {
-        use chacha20poly1305::aead::{AeadMutInPlace, KeyInit};
-        use chacha20poly1305::ChaCha8Poly1305;
-
-        // load key and nonce
-        let secrecy = key::Secrecy::Secret;
-        let key_id = &request.key;
-        let mut key = keystore.load_key(secrecy, None, key_id)?;
-
-        let serialized: &mut [u8] = key.material.as_mut();
-        let symmetric_key: [u8; KEY_LEN] = serialized[..KEY_LEN].try_into().unwrap();
-        let mut nonce = [0; NONCE_LEN];
-        match (&request.nonce, key.kind) {
-            (Some(n), KIND | KIND_NONCE) if n.len() == NONCE_LEN => {
-                nonce.copy_from_slice(n);
-            }
-            (None, KIND) => {
-                keystore.rng().fill_bytes(&mut nonce);
-            }
-            (None, KIND_NONCE) => {
-                increment_nonce(&mut serialized[KEY_LEN..])?;
-                nonce.copy_from_slice(&serialized[KEY_LEN..]);
-                let location = keystore.location(secrecy, key_id).unwrap();
-                keystore.overwrite_key(location, secrecy, KIND_NONCE, key_id, serialized)?;
-            }
-            (Some(_), KIND | KIND_NONCE) => return Err(Error::MechanismParamInvalid),
-            _ => return Err(Error::WrongKeyKind),
-        }
-
-        let mut aead = ChaCha8Poly1305::new(&GenericArray::from(symmetric_key));
-
-        let mut ciphertext = request.message.clone();
-        let tag: [u8; TAG_LEN] = aead
-            .encrypt_in_place_detached(
-                &GenericArray::from(nonce),
-                &request.associated_data,
-                &mut ciphertext,
-            )
-            .unwrap()
-            .as_slice()
-            .try_into()
-            .unwrap();
-
-        let nonce = ShortData::from_slice(&nonce).unwrap();
-        let tag = ShortData::from_slice(&tag).unwrap();
-
-        // let ciphertext = Message::from_slice(&ciphertext).unwrap();
-        Ok(reply::Encrypt {
-            ciphertext,
-            nonce,
-            tag,
-        })
-    }
-}
-
-
-#[cfg(feature = "chacha8-poly1305")]
 impl EncryptPQC2 for super::Chacha8Poly1305
 {
     #[inline(never)]
@@ -274,7 +211,7 @@ impl EncryptPQC2 for super::Chacha8Poly1305
         -> Result<reply::EncryptPQC2, Error>
     {
         use chacha20poly1305::ChaCha8Poly1305;
-        use chacha20poly1305::aead::{AeadInPlace, NewAead};
+        use chacha20poly1305::aead::{AeadInPlace};
 
 
         // load key and nonce
@@ -442,57 +379,6 @@ impl WrapKeyPQC2 for super::Chacha8Poly1305
         let wrapped_key = crate::postcard_serialize_bytes(&encryption_reply).map_err(|_| Error::CborError)?;
 
         Ok(reply::WrapKeyPQC2 { wrapped_key })
-    }
-}
-
-#[cfg(feature = "chacha8-poly1305")]
-impl UnwrapKey for super::Chacha8Poly1305
-{
-    #[inline(never)]
-    fn unwrap_key(
-        keystore: &mut impl Keystore,
-        request: &request::UnwrapKey,
-    ) -> Result<reply::UnwrapKey, Error> {
-        let reply::Encrypt {
-            ciphertext,
-            nonce,
-            tag,
-        } = crate::postcard_deserialize(&request.wrapped_key).map_err(|_| Error::CborError)?;
-
-        let decryption_request = request::Decrypt {
-            mechanism: Mechanism::Chacha8Poly1305,
-            key: request.wrapping_key,
-            message: ciphertext,
-            associated_data: request.associated_data.clone(),
-            nonce,
-            tag,
-        };
-
-        let serialized_key = if let Some(serialized_key) =
-            <super::Chacha8Poly1305>::decrypt(keystore, &decryption_request)?.plaintext
-        {
-            serialized_key
-        } else {
-            return Ok(reply::UnwrapKey { key: None });
-        };
-
-        // TODO: probably change this to returning Option<key> too
-        let key::Key {
-            flags: _,
-            kind,
-            material,
-        } = key::Key::try_deserialize(&serialized_key)?;
-
-        // TODO: need to check both secret and private keys
-        let key_id = keystore.store_key(
-            request.attributes.persistence,
-            // using for signing keys... we need to know
-            key::Secrecy::Secret,
-            kind,
-            &material,
-        )?;
-
-        Ok(reply::UnwrapKey { key: Some(key_id) })
     }
 }
 
