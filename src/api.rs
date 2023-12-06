@@ -333,7 +333,7 @@ pub mod request {
           - path: PathBuf
           - data: Message
           - user_attribute: Option<UserAttribute>
-        
+
         WriteFilePQC:
           - location: Location
           - path: PathBuf
@@ -454,7 +454,7 @@ pub mod reply {
         DecryptPQC:
             - plaintext: Option<Message>
 
-        
+
         DecryptPQC2:
             - plaintext: Option<MessagePQ>
 

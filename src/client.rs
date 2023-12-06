@@ -347,18 +347,29 @@ pub trait CryptoClient: PollClient {
         })
     }
 
-    fn decrypt_pqc<'c>(&'c mut self, mechanism: Mechanism, key: &[u8],
-        message: &[u8], associated_data: &[u8],
-        nonce: &[u8], tag: &[u8],
-        )
-        -> ClientResult<'c, reply::DecryptPQC, Self>
-    {
+    fn decrypt_pqc<'c>(
+        &'c mut self,
+        mechanism: Mechanism,
+        key: &[u8],
+        message: &[u8],
+        associated_data: &[u8],
+        nonce: &[u8],
+        tag: &[u8],
+    ) -> ClientResult<'c, reply::DecryptPQC, Self> {
         let message = Message::from_slice(message).map_err(|_| ClientError::DataTooLarge)?;
-        let associated_data = Message::from_slice(associated_data).map_err(|_| ClientError::DataTooLarge)?;
+        let associated_data =
+            Message::from_slice(associated_data).map_err(|_| ClientError::DataTooLarge)?;
         let nonce = ShortData::from_slice(nonce).map_err(|_| ClientError::DataTooLarge)?;
         let tag = ShortData::from_slice(tag).map_err(|_| ClientError::DataTooLarge)?;
         let key = Message::from_slice(key).map_err(|_| ClientError::DataTooLarge)?;
-        self.request(request::DecryptPQC { mechanism, key, message, associated_data, nonce, tag })
+        self.request(request::DecryptPQC {
+            mechanism,
+            key,
+            message,
+            associated_data,
+            nonce,
+            tag,
+        })
     }
 
     /// Clear private data from the key
@@ -579,24 +590,42 @@ pub trait CryptoClient: PollClient {
         })
     }
 
-    fn wrap_key_pqc(&mut self, mechanism: Mechanism, wrapping_key: &[u8], key: KeyId,
-        associated_data: &[u8])
-    -> ClientResult<'_, reply::WrapKeyPQC, Self>
-    {
-        let associated_data = Message::from_slice(associated_data).map_err(|_| ClientError::DataTooLarge)?;
-        let wrapping_key = Message::from_slice(wrapping_key).map_err(|_| ClientError::DataTooLarge)?;
-	self.request(request::WrapKeyPQC { mechanism, wrapping_key, key, associated_data })
+    fn wrap_key_pqc(
+        &mut self,
+        mechanism: Mechanism,
+        wrapping_key: &[u8],
+        key: KeyId,
+        associated_data: &[u8],
+    ) -> ClientResult<'_, reply::WrapKeyPQC, Self> {
+        let associated_data =
+            Message::from_slice(associated_data).map_err(|_| ClientError::DataTooLarge)?;
+        let wrapping_key =
+            Message::from_slice(wrapping_key).map_err(|_| ClientError::DataTooLarge)?;
+        self.request(request::WrapKeyPQC {
+            mechanism,
+            wrapping_key,
+            key,
+            associated_data,
+        })
     }
 
-    fn wrap_key_pqc2(&mut self, mechanism: Mechanism, wrapping_key: KeyId, key: &[u8],
-        associated_data: &[u8])
-    -> ClientResult<'_, reply::WrapKeyPQC2, Self>
-    {
-        let associated_data = Message::from_slice(associated_data).map_err(|_| ClientError::DataTooLarge)?;
+    fn wrap_key_pqc2(
+        &mut self,
+        mechanism: Mechanism,
+        wrapping_key: KeyId,
+        key: &[u8],
+        associated_data: &[u8],
+    ) -> ClientResult<'_, reply::WrapKeyPQC2, Self> {
+        let associated_data =
+            Message::from_slice(associated_data).map_err(|_| ClientError::DataTooLarge)?;
         let key = MessagePQ::from_slice(key).map_err(|_| ClientError::DataTooLarge)?;
-        self.request(request::WrapKeyPQC2 { mechanism, wrapping_key, key, associated_data })
+        self.request(request::WrapKeyPQC2 {
+            mechanism,
+            wrapping_key,
+            key,
+            associated_data,
+        })
     }
-
 }
 
 /// Create counters, increment existing counters.
@@ -712,10 +741,12 @@ pub trait FilesystemClient: PollClient {
         })
     }
 
-    fn read_file_pqc(&mut self, location: Location, path: PathBuf)
-        -> ClientResult<'_, reply::ReadFilePQC, Self>
-    {
-        self.request(request::ReadFilePQC { location, path } )
+    fn read_file_pqc(
+        &mut self,
+        location: Location,
+        path: PathBuf,
+    ) -> ClientResult<'_, reply::ReadFilePQC, Self> {
+        self.request(request::ReadFilePQC { location, path })
     }
 
     fn write_file(
@@ -739,15 +770,14 @@ pub trait FilesystemClient: PollClient {
         path: PathBuf,
         data: MessagePQ,
         user_attribute: Option<UserAttribute>,
-        )
-        -> ClientResult<'_, reply::WriteFilePQC, Self>
-    {
+    ) -> ClientResult<'_, reply::WriteFilePQC, Self> {
         self.request(request::WriteFilePQC {
-            location, path, data,
+            location,
+            path,
+            data,
             user_attribute,
-        } )
+        })
     }
-
 }
 
 /// All the other methods that are fit to expose.

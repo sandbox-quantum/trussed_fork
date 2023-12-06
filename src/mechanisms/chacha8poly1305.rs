@@ -165,12 +165,12 @@ impl Encrypt for super::Chacha8Poly1305 {
 }
 
 #[cfg(feature = "chacha8-poly1305")]
-impl DecryptPQC2 for super::Chacha8Poly1305
-{
+impl DecryptPQC2 for super::Chacha8Poly1305 {
     #[inline(never)]
-    fn decrypt_pqc2(keystore: &mut impl Keystore, request: &request::DecryptPQC2)
-        -> Result<reply::DecryptPQC2, Error>
-    {
+    fn decrypt_pqc2(
+        keystore: &mut impl Keystore,
+        request: &request::DecryptPQC2,
+    ) -> Result<reply::DecryptPQC2, Error> {
         use chacha20poly1305::aead::{AeadMutInPlace, KeyInit};
         use chacha20poly1305::ChaCha8Poly1305;
 
@@ -190,38 +190,36 @@ impl DecryptPQC2 for super::Chacha8Poly1305
         let nonce = GenericArray::from_slice(&request.nonce);
         let tag = GenericArray::from_slice(&request.tag);
 
-        let outcome = aead.decrypt_in_place_detached(
-            &nonce, &request.associated_data, &mut plaintext, &tag);
+        let outcome =
+            aead.decrypt_in_place_detached(&nonce, &request.associated_data, &mut plaintext, &tag);
 
-        Ok(reply::DecryptPQC2 { plaintext: {
-            if outcome.is_ok() {
-                Some(plaintext)
-            } else {
-                None
-            }
-        }})
+        Ok(reply::DecryptPQC2 {
+            plaintext: {
+                if outcome.is_ok() {
+                    Some(plaintext)
+                } else {
+                    None
+                }
+            },
+        })
     }
 }
 
-
 #[cfg(feature = "chacha8-poly1305")]
-impl EncryptPQC2 for super::Chacha8Poly1305
-{
+impl EncryptPQC2 for super::Chacha8Poly1305 {
     #[inline(never)]
-    fn encrypt_pqc2(keystore: &mut impl Keystore, request: &request::EncryptPQC2)
-        -> Result<reply::EncryptPQC2, Error>
-    {
-        use chacha20poly1305::ChaCha8Poly1305;
+    fn encrypt_pqc2(
+        keystore: &mut impl Keystore,
+        request: &request::EncryptPQC2,
+    ) -> Result<reply::EncryptPQC2, Error> {
         use chacha20poly1305::aead::{AeadInPlace, KeyInit};
-
+        use chacha20poly1305::ChaCha8Poly1305;
 
         // load key and nonce
         let secrecy = key::Secrecy::Secret;
         let key_kind = key::Kind::Symmetric32Nonce(12);
         let key_id = &request.key;
-        let mut serialized_material = keystore
-            .load_key(secrecy, Some(key_kind), key_id)?
-            .material;
+        let mut serialized_material = keystore.load_key(secrecy, Some(key_kind), key_id)?.material;
         let serialized: &mut [u8] = serialized_material.as_mut();
 
         assert!(serialized.len() == 44);
@@ -250,28 +248,32 @@ impl EncryptPQC2 for super::Chacha8Poly1305
             None => generated_nonce,
         };
 
-
-
         // keep in state?
         let aead = ChaCha8Poly1305::new(&GenericArray::clone_from_slice(symmetric_key));
 
         let mut ciphertext = request.message.clone();
-        let tag: [u8; 16] = aead.encrypt_in_place_detached(
-            &GenericArray::clone_from_slice(nonce),
-            &request.associated_data,
-            &mut ciphertext,
-        ).unwrap().as_slice().try_into().unwrap();
+        let tag: [u8; 16] = aead
+            .encrypt_in_place_detached(
+                &GenericArray::clone_from_slice(nonce),
+                &request.associated_data,
+                &mut ciphertext,
+            )
+            .unwrap()
+            .as_slice()
+            .try_into()
+            .unwrap();
 
         let nonce = ShortData::from_slice(nonce).unwrap();
         let tag = ShortData::from_slice(&tag).unwrap();
 
         // let ciphertext = Message::from_slice(&ciphertext).unwrap();
-        Ok(reply::EncryptPQC2 { ciphertext, nonce, tag })
+        Ok(reply::EncryptPQC2 {
+            ciphertext,
+            nonce,
+            tag,
+        })
     }
 }
-
-
-
 
 #[cfg(feature = "chacha8-poly1305")]
 impl WrapKey for super::Chacha8Poly1305 {
@@ -354,12 +356,12 @@ impl UnwrapKey for super::Chacha8Poly1305 {
 }
 
 #[cfg(feature = "chacha8-poly1305")]
-impl WrapKeyPQC2 for super::Chacha8Poly1305
-{
+impl WrapKeyPQC2 for super::Chacha8Poly1305 {
     #[inline(never)]
-    fn wrap_key_pqc2(keystore: &mut impl Keystore, request: &request::WrapKeyPQC2)
-        -> Result<reply::WrapKeyPQC2, Error>
-    {
+    fn wrap_key_pqc2(
+        keystore: &mut impl Keystore,
+        request: &request::WrapKeyPQC2,
+    ) -> Result<reply::WrapKeyPQC2, Error> {
         debug!("trussed: Chacha8Poly1305::WrapKeyPQC");
 
         // TODO: need to check both secret and private keys
@@ -375,9 +377,11 @@ impl WrapKeyPQC2 for super::Chacha8Poly1305
             associated_data: ShortData::new(),
             nonce: None,
         };
-        let encryption_reply = <super::Chacha8Poly1305>::encrypt_pqc2(keystore, &encryption_request)?;
+        let encryption_reply =
+            <super::Chacha8Poly1305>::encrypt_pqc2(keystore, &encryption_request)?;
 
-        let wrapped_key = crate::postcard_serialize_bytes(&encryption_reply).map_err(|_| Error::CborError)?;
+        let wrapped_key =
+            crate::postcard_serialize_bytes(&encryption_reply).map_err(|_| Error::CborError)?;
 
         Ok(reply::WrapKeyPQC2 { wrapped_key })
     }
