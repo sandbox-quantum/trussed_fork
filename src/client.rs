@@ -358,8 +358,7 @@ pub trait CryptoClient: PollClient {
         let nonce = ShortData::from_slice(nonce).map_err(|_| ClientError::DataTooLarge)?;
         let tag = ShortData::from_slice(tag).map_err(|_| ClientError::DataTooLarge)?;
         let key = Message::from_slice(key).map_err(|_| ClientError::DataTooLarge)?;
-        let r = self.request(request::DecryptPQC { mechanism, key, message, associated_data, nonce, tag })?;
-        Ok(r)
+        self.request(request::DecryptPQC { mechanism, key, message, associated_data, nonce, tag })
     }
 
     /// Clear private data from the key
@@ -595,8 +594,7 @@ pub trait CryptoClient: PollClient {
     {
         let associated_data = Message::from_slice(associated_data).map_err(|_| ClientError::DataTooLarge)?;
         let key = MessagePQ::from_slice(key).map_err(|_| ClientError::DataTooLarge)?;
-        let r = self.request(request::WrapKeyPQC2 { mechanism, wrapping_key, key, associated_data })?;
-        Ok(r)
+        self.request(request::WrapKeyPQC2 { mechanism, wrapping_key, key, associated_data })
     }
 
 }
@@ -717,8 +715,7 @@ pub trait FilesystemClient: PollClient {
     fn read_file_pqc(&mut self, location: Location, path: PathBuf)
         -> ClientResult<'_, reply::ReadFilePQC, Self>
     {
-        let r = self.request(request::ReadFilePQC { location, path } )?;
-        Ok(r)
+        self.request(request::ReadFilePQC { location, path } )
     }
 
     fn write_file(
@@ -745,11 +742,10 @@ pub trait FilesystemClient: PollClient {
         )
         -> ClientResult<'_, reply::WriteFilePQC, Self>
     {
-        let r = self.request(request::WriteFilePQC {
+        self.request(request::WriteFilePQC {
             location, path, data,
             user_attribute,
-        } )?;
-        Ok(r)
+        } )
     }
 
 }
