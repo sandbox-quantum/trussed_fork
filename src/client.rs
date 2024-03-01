@@ -119,6 +119,7 @@ pub trait PollClient {
     }
 }
 
+#[must_use = "Syscalls must be polled with the `syscall` macro"]
 pub struct FutureResult<'c, T, C: ?Sized>
 where
     C: PollClient,
@@ -305,6 +306,7 @@ pub trait CryptoClient: PollClient {
         })
     }
 
+    #[cfg(feature = "crypto-client-attest")]
     fn attest(
         &mut self,
         signing_mechanism: Mechanism,
@@ -342,6 +344,18 @@ pub trait CryptoClient: PollClient {
 
     fn delete(&mut self, key: KeyId) -> ClientResult<'_, reply::Delete, Self> {
         self.request(request::Delete {
+            key,
+            // mechanism,
+        })
+    }
+
+    /// Clear private data from the key
+    ///
+    /// This will not delete all metadata from storage.
+    /// Other backends can retain metadata required for `unwrap_key` to work properly
+    /// and delete this metadata only once `delete` is called.
+    fn clear(&mut self, key: KeyId) -> ClientResult<'_, reply::Clear, Self> {
+        self.request(request::Clear {
             key,
             // mechanism,
         })
@@ -523,15 +537,18 @@ pub trait CryptoClient: PollClient {
         wrapping_key: KeyId,
         wrapped_key: Message,
         associated_data: &[u8],
+        nonce: &[u8],
         attributes: StorageAttributes,
     ) -> ClientResult<'c, reply::UnwrapKey, Self> {
         let associated_data =
             Message::from_slice(associated_data).map_err(|_| ClientError::DataTooLarge)?;
+        let nonce = ShortData::from_slice(nonce).map_err(|_| ClientError::DataTooLarge)?;
         self.request(request::UnwrapKey {
             mechanism,
             wrapping_key,
             wrapped_key,
             associated_data,
+            nonce,
             attributes,
         })
     }
@@ -542,6 +559,7 @@ pub trait CryptoClient: PollClient {
         wrapping_key: KeyId,
         key: KeyId,
         associated_data: &[u8],
+        nonce: Option<ShortData>,
     ) -> ClientResult<'_, reply::WrapKey, Self> {
         let associated_data =
             Bytes::from_slice(associated_data).map_err(|_| ClientError::DataTooLarge)?;
@@ -550,12 +568,14 @@ pub trait CryptoClient: PollClient {
             wrapping_key,
             key,
             associated_data,
+            nonce,
         })
     }
 }
 
 /// Create counters, increment existing counters.
 pub trait CounterClient: PollClient {
+    #[cfg(feature = "counter-client")]
     fn create_counter(
         &mut self,
         location: Location,
@@ -563,6 +583,7 @@ pub trait CounterClient: PollClient {
         self.request(request::CreateCounter { location })
     }
 
+    #[cfg(feature = "counter-client")]
     fn increment_counter(
         &mut self,
         id: CounterId,
@@ -652,6 +673,19 @@ pub trait FilesystemClient: PollClient {
         path: PathBuf,
     ) -> ClientResult<'_, reply::Metadata, Self> {
         self.request(request::Metadata { location, path })
+    }
+
+    /// Rename a file or directory.
+    ///
+    /// If `to` exists, it must be the same type as `from` (i. e., both must be files or both must
+    /// be directories).  If `to` is a directory, it must be empty.
+    fn rename(
+        &mut self,
+        location: Location,
+        from: PathBuf,
+        to: PathBuf,
+    ) -> ClientResult<'_, reply::Rename, Self> {
+        self.request(request::Rename { location, from, to })
     }
 
     fn locate_file(

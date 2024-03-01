@@ -45,11 +45,7 @@ impl Eq for Id {}
 
 impl core::fmt::Debug for Id {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "Id(")?;
-        for ch in &self.hex() {
-            write!(f, "{}", &(*ch as char))?;
-        }
-        write!(f, ")")
+        write!(f, "Id({})", &self.hex_clean())
     }
 }
 
@@ -78,12 +74,27 @@ impl Id {
 
         for i in 0..array.len() {
             if array[i] == 0 && i != (array.len() - 1) {
-                // Skip leading zeros.
+                // This actually skips all zeroes, not only leading ones
+                // This is kept for backward compatibility with already serialized KeyIds
                 continue;
             }
 
             buffer.push(HEX_CHARS[(array[i] >> 4) as usize]).unwrap();
             buffer.push(HEX_CHARS[(array[i] & 0xf) as usize]).unwrap();
+        }
+        buffer
+    }
+
+    /// skips leading zeros
+    pub fn hex_clean(&self) -> String<32> {
+        const HEX_CHARS: &[u8] = b"0123456789abcdef";
+        let mut buffer = String::new();
+        let array = self.0.to_be_bytes();
+
+        // skip leading zeros
+        for v in array.into_iter().skip_while(|v| *v == 0) {
+            buffer.push(HEX_CHARS[(v >> 4) as usize] as char).unwrap();
+            buffer.push(HEX_CHARS[(v & 0xf) as usize] as char).unwrap();
         }
 
         buffer
@@ -158,6 +169,24 @@ macro_rules! impl_id {
 impl_id!(CertId);
 impl_id!(CounterId);
 impl_id!(KeyId);
+
+impl KeyId {
+    /// Create a KeyId from a given value instead of at random.
+    ///
+    /// This can be useful for backends which can use it to encode additional information inside of the KeyId itself (128 bits is a lot)
+    ///
+    /// This is already possible to acheive through the serde implementation, so this doesn't really add any unavailable functionality.
+    #[doc(hidden)]
+    pub fn from_value(value: u128) -> Self {
+        Self(Id(value))
+    }
+
+    #[doc(hidden)]
+    pub fn value(&self) -> u128 {
+        self.0 .0
+    }
+}
+
 // TODO: decide whether this is good idea.
 // It would allow using the same underlying u128 ID for the public key of the private
 // key in a keypair. However, DeleteKey and others would need to be adjusted.

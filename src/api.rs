@@ -31,6 +31,11 @@ generate_enums! {
     DeserializeKey: 5
     Encrypt: 6
     Delete: 7
+    // Clear private data from the key
+    // This will not always delete all metadata from storage.
+    // Other backends can retain metadata required for `unwrap_key` to work properly
+    // and delete this metadata only once `delete` is called.
+    Clear: 63
     DeleteAllKeys: 25
     Exists: 8
     // DeriveKeypair: 3
@@ -44,6 +49,7 @@ generate_enums! {
     ReadDirFilesNext: 14
     ReadFile: 15
     Metadata: 26
+    Rename: 27
     // ReadCounter: 7
     RandomBytes: 16
     SerializeKey: 17
@@ -150,6 +156,9 @@ pub mod request {
         Delete:
           - key: KeyId
 
+        Clear:
+          - key: KeyId
+
         DeleteAllKeys:
           - location: Location
 
@@ -247,6 +256,11 @@ pub mod request {
           - location: Location
           - path: PathBuf
 
+        Rename:
+          - location: Location
+          - from: PathBuf
+          - to: PathBuf
+
         RemoveFile:
           - location: Location
           - path: PathBuf
@@ -298,6 +312,7 @@ pub mod request {
           - wrapping_key: KeyId
           - wrapped_key: Message
           - associated_data: Message
+          - nonce: ShortData
           - attributes: StorageAttributes
 
         Verify:
@@ -313,6 +328,7 @@ pub mod request {
           - wrapping_key: KeyId
           - key: KeyId
           - associated_data: ShortData
+          - nonce: Option<ShortData>
 
         RequestUserConsent:
           - level: consent::Level
@@ -383,6 +399,9 @@ pub mod reply {
         Delete:
             - success: bool
 
+        Clear:
+            - success: bool
+
         DeleteAllKeys:
             - count: usize
 
@@ -437,6 +456,8 @@ pub mod reply {
 
         Metadata:
           - metadata: Option<crate::types::Metadata>
+
+        Rename:
 
         RemoveDir:
 
