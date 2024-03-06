@@ -306,6 +306,34 @@ pub trait CryptoClient: PollClient {
         })
     }
 
+    fn encap(
+        &mut self,
+        mechanism: Mechanism,
+        public_key: KeyId,
+        attributes: StorageAttributes,
+    ) -> ClientResult<'_, reply::Encap, Self> {
+        self.request(request::Encap {
+            mechanism,
+            public_key,
+            attributes,
+        })
+    }
+
+    fn decap(
+        &mut self,
+        mechanism: Mechanism,
+        private_key: KeyId,
+        ciphertext: Message,
+        attributes: StorageAttributes,
+    ) -> ClientResult<'_, reply::Decap, Self> {
+        self.request(request::Decap {
+            mechanism,
+            private_key,
+            ciphertext,
+            attributes,
+        })
+    }
+
     #[cfg(feature = "crypto-client-attest")]
     fn attest(
         &mut self,
@@ -432,6 +460,17 @@ pub trait CryptoClient: PollClient {
         attributes: StorageAttributes,
     ) -> ClientResult<'_, reply::GenerateKey, Self> {
         self.request(request::GenerateKey {
+            mechanism,
+            attributes,
+        })
+    }
+
+    fn generate_keypair(
+        &mut self,
+        mechanism: Mechanism,
+        attributes: StorageAttributes,
+    ) -> ClientResult<'_, reply::GenerateKeyPair, Self> {
+        self.request(request::GenerateKeyPair {
             mechanism,
             attributes,
         })

@@ -50,7 +50,8 @@ mod tests {
     // size.  Bumping the size is not a breaking change but should only be done if really
     // necessary.
 
-    const MAX_SIZE: usize = 2416;
+    // const MAX_SIZE: usize = 2416;
+    const MAX_SIZE: usize = 4707;
 
     fn assert_size<T>() {
         let size = mem::size_of::<T>();

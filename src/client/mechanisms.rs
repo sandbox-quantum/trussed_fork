@@ -497,3 +497,44 @@ pub trait X255: CryptoClient {
         )
     }
 }
+
+// #[cfg(feature = "kyber768")]
+impl<S: Syscall, E> Kyber768 for ClientImplementation<S, E> {}
+
+pub trait Kyber768: CryptoClient {
+    fn generate_kyber768_keypair(
+        &mut self,
+        persistence: Location,
+    ) -> ClientResult<'_, reply::GenerateKeyPair, Self> {
+        self.generate_keypair(
+            Mechanism::Kyber768,
+            StorageAttributes::new().set_persistence(persistence),
+        )
+    }
+
+    fn encap_kyber768(
+        &mut self,
+        public_key: KeyId,
+        persistence: Location,
+    ) -> ClientResult<'_, reply::Encap, Self> {
+        self.encap(
+            Mechanism::Kyber768,
+            public_key,
+            StorageAttributes::new().set_persistence(persistence),
+        )
+    }
+
+    fn decap_kyber768(
+        &mut self,
+        private_key: KeyId,
+        ciphertext: Message,
+        persistence: Location,
+    ) -> ClientResult<'_, reply::Decap, Self> {
+        self.decap(
+            Mechanism::Kyber768,
+            private_key,
+            ciphertext,
+            StorageAttributes::new().set_persistence(persistence),
+        )
+    }
+}

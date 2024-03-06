@@ -8,7 +8,10 @@ use littlefs2::consts;
 
 pub type MAX_APPLICATION_NAME_LENGTH = consts::U256;
 pub const MAX_LONG_DATA_LENGTH: usize = 1024;
-pub const MAX_MESSAGE_LENGTH: usize = 1024;
+// pub const MAX_MESSAGE_LENGTH: usize = 1024;
+// The ciphertext of Kyber768: 1088 bytes.
+// TODO: Fixed this number: Additional 128 bytes is for Hybrid usage.
+pub const MAX_MESSAGE_LENGTH: usize = 1088 + 128;
 pub type MAX_OBJECT_HANDLES = consts::U16;
 pub type MAX_LABEL_LENGTH = consts::U256;
 pub const MAX_MEDIUM_DATA_LENGTH: usize = 256;
@@ -46,9 +49,18 @@ cfg_if::cfg_if! {
 }
 pub const MAX_SHORT_DATA_LENGTH: usize = 128;
 
-pub const MAX_SIGNATURE_LENGTH: usize = 512 * 2;
+// pub const MAX_SIGNATURE_LENGTH: usize = 512 * 2;
+// The signature of Dilithium3: 3309 bytes
+// TODO: Fixed this number: Additional 128 bytes is for Hybrid usage.
+pub const MAX_SIGNATURE_LENGTH: usize = 3309 + 128;
+
 // FIXME: Value from https://stackoverflow.com/questions/5403808/private-key-length-bytes for Rsa2048 Private key
-pub const MAX_KEY_MATERIAL_LENGTH: usize = 1160 * 2 + 72;
+
+// pub const MAX_KEY_MATERIAL_LENGTH: usize = 1160 * 2 + 72;
+// The secret key, public key of Dilithium3: 4032, 1952 bytes
+// The secret key, public key of Kyber768: 2400, 1184 bytes
+// TODO: Fixed this number: Additional 128 bytes is for Hybrid usage.
+pub const MAX_KEY_MATERIAL_LENGTH : usize = 4032 + 128;
 
 // must be MAX_KEY_MATERIAL_LENGTH + 4
 pub const MAX_SERIALIZED_KEY_LENGTH: usize = MAX_KEY_MATERIAL_LENGTH + 4;

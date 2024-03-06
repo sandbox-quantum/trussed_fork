@@ -48,6 +48,9 @@ rpc_trait! {
     Encrypt, encrypt,
     Exists, exists,
     GenerateKey, generate_key,
+    GenerateKeyPair, generate_keypair,
+    Encap, encap,
+    Decap, decap,
     Hash, hash,
     SerializeKey, serialize_key,
     Sign, sign,
@@ -161,6 +164,31 @@ impl<P: Platform> ServiceResources<P> {
         debug_now!("TRUSSED {:?}", request);
         match request {
             Request::DummyRequest => Ok(Reply::DummyReply),
+
+            Request::GenerateKeyPair(request) => match request.mechanism {
+                Mechanism::Kyber768 => {
+                    mechanisms::Kyber768::generate_keypair(&mut keystore(self, ctx)?, request)
+                }
+
+                _ => Err(Error::MechanismNotAvailable),
+            }
+            .map(Reply::GenerateKeyPair),
+
+            Request::Encap(request) => match request.mechanism {
+                Mechanism::Kyber768 => {
+                    mechanisms::Kyber768::encap(&mut keystore(self, ctx)?, request)
+                }
+                _ => Err(Error::MechanismNotAvailable),
+            }
+            .map(Reply::Encap),
+
+            Request::Decap(request) => match request.mechanism {
+                Mechanism::Kyber768 => {
+                    mechanisms::Kyber768::decap(&mut keystore(self, ctx)?, request)
+                }
+                _ => Err(Error::MechanismNotAvailable),
+            }
+            .map(Reply::Decap),
 
             Request::Agree(request) => match request.mechanism {
                 Mechanism::P256 => mechanisms::P256::agree(&mut keystore(self, ctx)?, request),

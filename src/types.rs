@@ -626,6 +626,10 @@ pub enum Mechanism {
     Rsa2048Pkcs1v15,
     Rsa3072Pkcs1v15,
     Rsa4096Pkcs1v15,
+
+    /// Post-quantum Cryptography
+    Kyber768,
+    Dilithium3,
 }
 
 pub type LongData = Bytes<MAX_LONG_DATA_LENGTH>;

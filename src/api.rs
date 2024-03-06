@@ -31,6 +31,9 @@ generate_enums! {
     DeserializeKey: 5
     Encrypt: 6
     Delete: 7
+    Encap: 100
+    Decap: 101
+    GenerateKeyPair: 103
     // Clear private data from the key
     // This will not always delete all metadata from storage.
     // Other backends can retain metadata required for `unwrap_key` to work properly
@@ -196,6 +199,21 @@ pub mod request {
           - message: Message
           - associated_data: ShortData
           - nonce: Option<ShortData>
+
+        Encap:
+          - mechanism: Mechanism
+          - public_key: KeyId
+          - attributes: StorageAttributes
+
+        Decap:
+          - mechanism: Mechanism
+          - private_key: KeyId
+          - ciphertext: Message
+          - attributes: StorageAttributes
+
+        GenerateKeyPair:
+          - mechanism: Mechanism
+          - attributes: StorageAttributes
 
         Exists:
           - mechanism: Mechanism
@@ -415,6 +433,17 @@ pub mod reply {
         DeserializeKey:
             - key: KeyId
 
+        Encap:
+            - ciphertext: Message
+            - shared_secret: KeyId
+
+        Decap:
+            - shared_secret: KeyId
+
+        GenerateKeyPair:
+            - private_key: KeyId
+            - public_key: KeyId
+
         Encrypt:
             - ciphertext: Message
             - nonce: ShortData
@@ -428,10 +457,6 @@ pub mod reply {
 
         GenerateSecretKey:
             - key: KeyId
-
-        // GenerateKeypair:
-        //     - private_key: KeyId
-        //     - public_key: KeyId
 
         Hash:
           - hash: ShortData
