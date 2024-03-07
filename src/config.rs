@@ -58,7 +58,7 @@ pub const MAX_SIGNATURE_LENGTH: usize = 3309 + 128;
 
 // pub const MAX_KEY_MATERIAL_LENGTH: usize = 1160 * 2 + 72;
 // The secret key, public key of Dilithium3: 4032, 1952 bytes
-// The secret key, public key of Kyber768: 2400, 1184 bytes
+// The secret key, public key of Kyber512, Kyber768, Kyber1024: (1632, 800), (2400, 1184), (3168, 1568)  bytes
 // TODO: Fixed this number: Additional 128 bytes is for Hybrid usage.
 pub const MAX_KEY_MATERIAL_LENGTH : usize = 4032 + 128;
 

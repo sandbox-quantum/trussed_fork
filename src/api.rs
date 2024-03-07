@@ -213,7 +213,8 @@ pub mod request {
 
         GenerateKeyPair:
           - mechanism: Mechanism
-          - attributes: StorageAttributes
+          - sk_attributes: StorageAttributes
+          - pk_attributes: StorageAttributes
 
         Exists:
           - mechanism: Mechanism

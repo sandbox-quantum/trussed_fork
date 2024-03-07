@@ -71,7 +71,10 @@ pub enum Kind {
     Ed255,
     P256,
     X255,
+    Kyber512,
     Kyber768,
+    Kyber1024,
+    Dilithium2,
     Dilithium3,
 }
 
@@ -213,8 +216,11 @@ impl Kind {
             Kind::Rsa2048 => 7,
             Kind::Rsa3072 => 8,
             Kind::Rsa4096 => 9,
-            Kind::Kyber768 => 10,
-            Kind::Dilithium3 => 11,
+            Kind::Kyber512 => 10,
+            Kind::Kyber768 => 11,
+            Kind::Kyber1024 => 12,
+            Kind::Dilithium2 => 13,
+            Kind::Dilithium3 => 14,
         }
     }
 
@@ -229,8 +235,11 @@ impl Kind {
             7 => Kind::Rsa2048,
             8 => Kind::Rsa3072,
             9 => Kind::Rsa4096,
-            10 => Kind::Kyber768,
-            11 => Kind::Dilithium3,
+            10 => Kind::Kyber512,
+            11 => Kind::Kyber768,
+            12 => Kind::Kyber1024,
+            13 => Kind::Dilithium2,
+            14 => Kind::Dilithium3,
             _ => return Err(Error::InvalidSerializedKey),
         })
     }

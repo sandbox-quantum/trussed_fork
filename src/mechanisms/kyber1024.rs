@@ -5,21 +5,21 @@ use crate::error::Error;
 use crate::service::*;
 use crate::types::*;
 
-use pqcrypto_kyber::kyber768::PublicKey as Kyber768PublicKey;
-use pqcrypto_kyber::kyber768::{
+use pqcrypto_kyber::kyber1024::PublicKey as Kyber1024PublicKey;
+use pqcrypto_kyber::kyber1024::{
     decapsulate, encapsulate, keypair, public_key_bytes, secret_key_bytes,
 };
 use pqcrypto_traits::kem::*;
 
-pub const KYBER768_PUBLICKEYBYTES: usize = public_key_bytes();
-pub const KYBER768_SECRETKEYBYTES: usize = secret_key_bytes();
+pub const KYBER1024_PUBLICKEYBYTES: usize = public_key_bytes();
+pub const KYBER1024_SECRETKEYBYTES: usize = secret_key_bytes();
 
 fn load_public_key(
     keystore: &mut impl Keystore,
     key_id: &KeyId,
-) -> Result<[u8; KYBER768_PUBLICKEYBYTES], Error> {
-    let public_bytes: [u8; KYBER768_PUBLICKEYBYTES] = keystore
-        .load_key(key::Secrecy::Public, Some(key::Kind::Kyber768), key_id)?
+) -> Result<[u8; KYBER1024_PUBLICKEYBYTES], Error> {
+    let public_bytes: [u8; KYBER1024_PUBLICKEYBYTES] = keystore
+        .load_key(key::Secrecy::Public, Some(key::Kind::Kyber1024), key_id)?
         .material
         .as_slice()
         .try_into()
@@ -31,9 +31,9 @@ fn load_public_key(
 fn load_secret_key(
     keystore: &mut impl Keystore,
     key_id: &KeyId,
-) -> Result<[u8; KYBER768_SECRETKEYBYTES], Error> {
-    let private_bytes: [u8; KYBER768_SECRETKEYBYTES] = keystore
-        .load_key(key::Secrecy::Secret, Some(key::Kind::Kyber768), key_id)?
+) -> Result<[u8; KYBER1024_SECRETKEYBYTES], Error> {
+    let private_bytes: [u8; KYBER1024_SECRETKEYBYTES] = keystore
+        .load_key(key::Secrecy::Secret, Some(key::Kind::Kyber1024), key_id)?
         .material
         .as_slice()
         .try_into()
@@ -42,8 +42,8 @@ fn load_secret_key(
     Ok(private_bytes)
 }
 
-#[cfg(feature = "kyber768")]
-impl GenerateKeyPair for super::Kyber768 {
+#[cfg(feature = "kyber1024")]
+impl GenerateKeyPair for super::Kyber1024 {
     // #[inline(never)]
     fn generate_keypair(
         keystore: &mut impl Keystore,
@@ -56,7 +56,7 @@ impl GenerateKeyPair for super::Kyber768 {
         let public_key_id = keystore.store_key(
             request.pk_attributes.persistence,
             key::Secrecy::Public,
-            key::Info::from(key::Kind::Kyber768).with_local_flag(),
+            key::Info::from(key::Kind::Kyber1024).with_local_flag(),
             &public_key.as_bytes(),
         )?;
 
@@ -64,7 +64,7 @@ impl GenerateKeyPair for super::Kyber768 {
         let private_key_id = keystore.store_key(
             request.sk_attributes.persistence,
             key::Secrecy::Secret,
-            key::Info::from(key::Kind::Kyber768).with_local_flag(),
+            key::Info::from(key::Kind::Kyber1024).with_local_flag(),
             &private_key.as_bytes(),
         )?;
 
@@ -76,8 +76,8 @@ impl GenerateKeyPair for super::Kyber768 {
     }
 }
 
-#[cfg(feature = "kyber768")]
-impl Encap for super::Kyber768 {
+#[cfg(feature = "kyber1024")]
+impl Encap for super::Kyber1024 {
     // #[inline(never)]
     fn encap(
         keystore: &mut impl Keystore,
@@ -114,8 +114,8 @@ impl Encap for super::Kyber768 {
     }
 }
 
-#[cfg(feature = "kyber768")]
-impl Decap for super::Kyber768 {
+#[cfg(feature = "kyber1024")]
+impl Decap for super::Kyber1024 {
     // #[inline(never)]
     fn decap(
         keystore: &mut impl Keystore,
@@ -152,21 +152,21 @@ impl Decap for super::Kyber768 {
     }
 }
 
-#[cfg(feature = "kyber768")]
-impl Exists for super::Kyber768 {
+#[cfg(feature = "kyber1024")]
+impl Exists for super::Kyber1024 {
     // #[inline(never)]
     fn exists(
         keystore: &mut impl Keystore,
         request: &request::Exists,
     ) -> Result<reply::Exists, Error> {
         let key_id = request.key;
-        let exists = keystore.exists_key(key::Secrecy::Secret, Some(key::Kind::Kyber768), &key_id);
+        let exists = keystore.exists_key(key::Secrecy::Secret, Some(key::Kind::Kyber1024), &key_id);
         Ok(reply::Exists { exists })
     }
 }
 
-#[cfg(feature = "kyber768")]
-impl SerializeKey for super::Kyber768 {
+#[cfg(feature = "kyber1024")]
+impl SerializeKey for super::Kyber1024 {
     // #[inline(never)]
     fn serialize_key(
         keystore: &mut impl Keystore,
@@ -192,8 +192,8 @@ impl SerializeKey for super::Kyber768 {
     }
 }
 
-#[cfg(feature = "kyber768")]
-impl DeserializeKey for super::Kyber768 {
+#[cfg(feature = "kyber1024")]
+impl DeserializeKey for super::Kyber1024 {
     // #[inline(never)]
     fn deserialize_key(
         keystore: &mut impl Keystore,
@@ -207,18 +207,18 @@ impl DeserializeKey for super::Kyber768 {
             return Err(Error::InternalError);
         }
 
-        if request.serialized_key.len() != KYBER768_PUBLICKEYBYTES {
+        if request.serialized_key.len() != KYBER1024_PUBLICKEYBYTES {
             return Err(Error::InvalidSerializedKey);
         }
 
-        let public_key: Kyber768PublicKey =
+        let public_key: Kyber1024PublicKey =
             PublicKey::from_bytes(&request.serialized_key.as_slice()).unwrap();
 
         // Since we use Raw so the serialized_key is converted directly.
         let public_id = keystore.store_key(
             request.attributes.persistence,
             key::Secrecy::Public,
-            key::Kind::Kyber768,
+            key::Kind::Kyber1024,
             &public_key.as_bytes(),
         )?;
 
@@ -226,15 +226,15 @@ impl DeserializeKey for super::Kyber768 {
     }
 }
 
-#[cfg(not(feature = "kyber768"))]
-impl GenerateKeyPair for super::Kyber768 {}
-#[cfg(not(feature = "kyber768"))]
-impl Encap for super::Kyber768 {}
-#[cfg(not(feature = "kyber768"))]
-impl Decap for super::Kyber768 {}
-#[cfg(not(feature = "kyber768"))]
-impl Exists for super::Kyber768 {}
-#[cfg(not(feature = "kyber768"))]
-impl SerializeKey for super::Kyber768 {}
-#[cfg(not(feature = "kyber768"))]
-impl DeserializeKey for super::Kyber768 {}
+#[cfg(not(feature = "kyber1024"))]
+impl GenerateKeyPair for super::Kyber1024 {}
+#[cfg(not(feature = "kyber1024"))]
+impl Encap for super::Kyber1024 {}
+#[cfg(not(feature = "kyber1024"))]
+impl Decap for super::Kyber1024 {}
+#[cfg(not(feature = "kyber1024"))]
+impl Exists for super::Kyber1024 {}
+#[cfg(not(feature = "kyber1024"))]
+impl SerializeKey for super::Kyber1024 {}
+#[cfg(not(feature = "kyber1024"))]
+impl DeserializeKey for super::Kyber1024 {}

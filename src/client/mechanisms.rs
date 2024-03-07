@@ -498,17 +498,64 @@ pub trait X255: CryptoClient {
     }
 }
 
+
+// #[cfg(feature = "kyber512")]
+impl<S: Syscall, E> Kyber512 for ClientImplementation<S, E> {}
+
+pub trait Kyber512: CryptoClient {
+    fn generate_kyber512_keypair(
+        &mut self,
+        sk_persistence: Location,
+        pk_persistence: Location,
+    ) -> ClientResult<'_, reply::GenerateKeyPair, Self> {
+        self.generate_keypair(
+            Mechanism::Kyber512,
+            StorageAttributes::new().set_persistence(sk_persistence),
+            StorageAttributes::new().set_persistence(pk_persistence),
+        )
+    }
+
+    fn encap_kyber512(
+        &mut self,
+        public_key: KeyId,
+        persistence: Location,
+    ) -> ClientResult<'_, reply::Encap, Self> {
+        self.encap(
+            Mechanism::Kyber512,
+            public_key,
+            StorageAttributes::new().set_persistence(persistence),
+        )
+    }
+
+    fn decap_kyber512(
+        &mut self,
+        private_key: KeyId,
+        ciphertext: Message,
+        persistence: Location,
+    ) -> ClientResult<'_, reply::Decap, Self> {
+        self.decap(
+            Mechanism::Kyber512,
+            private_key,
+            ciphertext,
+            StorageAttributes::new().set_persistence(persistence),
+        )
+    }
+}
+
+
 // #[cfg(feature = "kyber768")]
 impl<S: Syscall, E> Kyber768 for ClientImplementation<S, E> {}
 
 pub trait Kyber768: CryptoClient {
     fn generate_kyber768_keypair(
         &mut self,
-        persistence: Location,
+        sk_persistence: Location,
+        pk_persistence: Location,
     ) -> ClientResult<'_, reply::GenerateKeyPair, Self> {
         self.generate_keypair(
             Mechanism::Kyber768,
-            StorageAttributes::new().set_persistence(persistence),
+            StorageAttributes::new().set_persistence(sk_persistence),
+            StorageAttributes::new().set_persistence(pk_persistence),
         )
     }
 
@@ -532,6 +579,50 @@ pub trait Kyber768: CryptoClient {
     ) -> ClientResult<'_, reply::Decap, Self> {
         self.decap(
             Mechanism::Kyber768,
+            private_key,
+            ciphertext,
+            StorageAttributes::new().set_persistence(persistence),
+        )
+    }
+}
+
+
+// #[cfg(feature = "kyber1024")]
+impl<S: Syscall, E> Kyber1024 for ClientImplementation<S, E> {}
+
+pub trait Kyber1024: CryptoClient {
+    fn generate_kyber1024_keypair(
+        &mut self,
+        sk_persistence: Location,
+        pk_persistence: Location,
+    ) -> ClientResult<'_, reply::GenerateKeyPair, Self> {
+        self.generate_keypair(
+            Mechanism::Kyber1024,
+            StorageAttributes::new().set_persistence(sk_persistence),
+            StorageAttributes::new().set_persistence(pk_persistence),
+        )
+    }
+
+    fn encap_kyber1024(
+        &mut self,
+        public_key: KeyId,
+        persistence: Location,
+    ) -> ClientResult<'_, reply::Encap, Self> {
+        self.encap(
+            Mechanism::Kyber1024,
+            public_key,
+            StorageAttributes::new().set_persistence(persistence),
+        )
+    }
+
+    fn decap_kyber1024(
+        &mut self,
+        private_key: KeyId,
+        ciphertext: Message,
+        persistence: Location,
+    ) -> ClientResult<'_, reply::Decap, Self> {
+        self.decap(
+            Mechanism::Kyber1024,
             private_key,
             ciphertext,
             StorageAttributes::new().set_persistence(persistence),

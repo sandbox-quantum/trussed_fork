@@ -628,7 +628,10 @@ pub enum Mechanism {
     Rsa4096Pkcs1v15,
 
     /// Post-quantum Cryptography
+    Kyber512,
     Kyber768,
+    Kyber1024,
+    Dilithium2,
     Dilithium3,
 }
 

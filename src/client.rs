@@ -468,11 +468,13 @@ pub trait CryptoClient: PollClient {
     fn generate_keypair(
         &mut self,
         mechanism: Mechanism,
-        attributes: StorageAttributes,
+        sk_attributes: StorageAttributes,
+        pk_attributes: StorageAttributes,
     ) -> ClientResult<'_, reply::GenerateKeyPair, Self> {
         self.request(request::GenerateKeyPair {
             mechanism,
-            attributes,
+            sk_attributes,
+            pk_attributes,
         })
     }
 

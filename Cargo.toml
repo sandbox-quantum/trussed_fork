@@ -23,7 +23,9 @@ nb = "1"
 postcard = "0.7.0"
 rand_core = "0.6"
 serde = { version = "1.0", default-features = false }
-zeroize = { version = "1.2", default-features = false, features = ["zeroize_derive"] }
+zeroize = { version = "1.2", default-features = false, features = [
+    "zeroize_derive",
+] }
 rand_chacha = { version = "0.3.1", default-features = false }
 
 # RustCrypto
@@ -31,7 +33,10 @@ aes = { version = "0.8", default-features = false }
 cbc = "0.1.2"
 blake2 = { version = "0.10", default-features = false, optional = true }
 chacha20 = { version = "0.9", default-features = false }
-chacha20poly1305 = { version = "0.10", default-features = false, features = ["heapless", "reduced-round"] }
+chacha20poly1305 = { version = "0.10", default-features = false, features = [
+    "heapless",
+    "reduced-round",
+] }
 des = { version = "0.8", optional = true }
 hmac = "0.12"
 sha-1 = { version = "0.10", default-features = false, optional = true }
@@ -48,7 +53,10 @@ cbor-smol = "0.4"
 heapless-bytes = { version = "0.3.0", features = ["cbor"] }
 interchange = "0.3.0"
 littlefs2 = "0.4.0"
-p256-cortex-m4 = { version = "0.1.0-alpha.6", features = ["prehash", "sec1-signatures"] }
+p256-cortex-m4 = { version = "0.1.0-alpha.6", features = [
+    "prehash",
+    "sec1-signatures",
+] }
 salty = { version = "0.3.0", features = ["cose"] }
 serde-indexed = "0.1.0"
 
@@ -87,8 +95,8 @@ default-mechanisms = [
     # "hmac-blake2s",
     "hmac-sha1",
     "hmac-sha256",
-	# For some reason, this breaks Solo 2 firmware
-	# At minimum, this seems to have a huge "block" method
+    # For some reason, this breaks Solo 2 firmware
+    # At minimum, this seems to have a huge "block" method
     # "hmac-sha512",
     "p256",
     "sha256",
@@ -96,8 +104,9 @@ default-mechanisms = [
     "totp",
     "trng",
     # PQC algorithms
+    "kyber512",
     "kyber768",
-    "dilithium3",
+    "kyber1024",
 ]
 aes256-cbc = []
 chacha8-poly1305 = []
@@ -112,8 +121,9 @@ sha256 = []
 tdes = ["des"]
 totp = ["sha-1"]
 trng = ["sha-1"]
+kyber512 = []
 kyber768 = []
-dilithium3 = []
+kyber1024 = []
 
 # syscalls
 default-syscalls = ["counter-client", "crypto-client-attest"]

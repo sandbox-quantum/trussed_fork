@@ -64,8 +64,13 @@ mod trng;
 pub struct X255 {}
 mod x255;
 
+pub struct Kyber512 {}
+mod kyber512;
 pub struct Kyber768 {}
 mod kyber768;
+
+pub struct Kyber1024 {}
+mod kyber1024;
 
 pub struct Dilithium3 {}
 mod dilithium3;

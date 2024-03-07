@@ -166,8 +166,16 @@ impl<P: Platform> ServiceResources<P> {
             Request::DummyRequest => Ok(Reply::DummyReply),
 
             Request::GenerateKeyPair(request) => match request.mechanism {
+                Mechanism::Kyber512 => {
+                    mechanisms::Kyber512::generate_keypair(&mut keystore(self, ctx)?, request)
+                }
+
                 Mechanism::Kyber768 => {
                     mechanisms::Kyber768::generate_keypair(&mut keystore(self, ctx)?, request)
+                }
+
+                Mechanism::Kyber1024 => {
+                    mechanisms::Kyber1024::generate_keypair(&mut keystore(self, ctx)?, request)
                 }
 
                 _ => Err(Error::MechanismNotAvailable),
@@ -175,16 +183,32 @@ impl<P: Platform> ServiceResources<P> {
             .map(Reply::GenerateKeyPair),
 
             Request::Encap(request) => match request.mechanism {
+                Mechanism::Kyber512 => {
+                    mechanisms::Kyber512::encap(&mut keystore(self, ctx)?, request)
+                }
+
                 Mechanism::Kyber768 => {
                     mechanisms::Kyber768::encap(&mut keystore(self, ctx)?, request)
+                }
+
+                Mechanism::Kyber1024 => {
+                    mechanisms::Kyber1024::encap(&mut keystore(self, ctx)?, request)
                 }
                 _ => Err(Error::MechanismNotAvailable),
             }
             .map(Reply::Encap),
 
             Request::Decap(request) => match request.mechanism {
+                Mechanism::Kyber512 => {
+                    mechanisms::Kyber512::decap(&mut keystore(self, ctx)?, request)
+                }
+
                 Mechanism::Kyber768 => {
                     mechanisms::Kyber768::decap(&mut keystore(self, ctx)?, request)
+                }
+
+                Mechanism::Kyber1024 => {
+                    mechanisms::Kyber1024::decap(&mut keystore(self, ctx)?, request)
                 }
                 _ => Err(Error::MechanismNotAvailable),
             }
