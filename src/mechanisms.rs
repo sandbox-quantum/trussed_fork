@@ -72,6 +72,9 @@ mod kyber768;
 pub struct Kyber1024 {}
 mod kyber1024;
 
+pub struct Dilithium2 {}
+mod dilithium2;
+
 pub struct Dilithium3 {}
 mod dilithium3;
 

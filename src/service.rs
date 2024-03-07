@@ -166,6 +166,14 @@ impl<P: Platform> ServiceResources<P> {
             Request::DummyRequest => Ok(Reply::DummyReply),
 
             Request::GenerateKeyPair(request) => match request.mechanism {
+                Mechanism::Dilithium2 => {
+                    mechanisms::Dilithium2::generate_keypair(&mut keystore(self, ctx)?, request)
+                }
+
+                Mechanism::Dilithium3 => {
+                    mechanisms::Dilithium3::generate_keypair(&mut keystore(self, ctx)?, request)
+                }
+
                 Mechanism::Kyber512 => {
                     mechanisms::Kyber512::generate_keypair(&mut keystore(self, ctx)?, request)
                 }
@@ -287,6 +295,24 @@ impl<P: Platform> ServiceResources<P> {
                 Mechanism::X255 => {
                     mechanisms::X255::deserialize_key(&mut keystore(self, ctx)?, request)
                 }
+
+                Mechanism::Kyber512 => {
+                    mechanisms::Kyber512::deserialize_key(&mut keystore(self, ctx)?, request)
+                }
+                Mechanism::Kyber768 => {
+                    mechanisms::Kyber768::deserialize_key(&mut keystore(self, ctx)?, request)
+                }
+                Mechanism::Kyber1024 => {
+                    mechanisms::Kyber1024::deserialize_key(&mut keystore(self, ctx)?, request)
+                }
+
+                Mechanism::Dilithium2 => {
+                    mechanisms::Dilithium2::deserialize_key(&mut keystore(self, ctx)?, request)
+                }
+                Mechanism::Dilithium3 => {
+                    mechanisms::Dilithium3::deserialize_key(&mut keystore(self, ctx)?, request)
+                }
+
                 _ => Err(Error::MechanismNotAvailable),
             }
             .map(Reply::DeserializeKey),
@@ -323,6 +349,23 @@ impl<P: Platform> ServiceResources<P> {
                 Mechanism::P256 => mechanisms::P256::exists(&mut keystore(self, ctx)?, request),
                 Mechanism::Totp => mechanisms::Totp::exists(&mut keystore(self, ctx)?, request),
                 Mechanism::X255 => mechanisms::X255::exists(&mut keystore(self, ctx)?, request),
+
+                Mechanism::Kyber512 => {
+                    mechanisms::Kyber512::exists(&mut keystore(self, ctx)?, request)
+                }
+                Mechanism::Kyber768 => {
+                    mechanisms::Kyber768::exists(&mut keystore(self, ctx)?, request)
+                }
+                Mechanism::Kyber1024 => {
+                    mechanisms::Kyber1024::exists(&mut keystore(self, ctx)?, request)
+                }
+
+                Mechanism::Dilithium2 => {
+                    mechanisms::Dilithium2::exists(&mut keystore(self, ctx)?, request)
+                }
+                Mechanism::Dilithium3 => {
+                    mechanisms::Dilithium3::exists(&mut keystore(self, ctx)?, request)
+                }
                 _ => Err(Error::MechanismNotAvailable),
             }
             .map(Reply::Exists),
@@ -588,6 +631,24 @@ impl<P: Platform> ServiceResources<P> {
                 Mechanism::SharedSecret => {
                     mechanisms::SharedSecret::serialize_key(&mut keystore(self, ctx)?, request)
                 }
+
+                Mechanism::Kyber512 => {
+                    mechanisms::Kyber512::serialize_key(&mut keystore(self, ctx)?, request)
+                }
+                Mechanism::Kyber768 => {
+                    mechanisms::Kyber768::serialize_key(&mut keystore(self, ctx)?, request)
+                }
+                Mechanism::Kyber1024 => {
+                    mechanisms::Kyber1024::serialize_key(&mut keystore(self, ctx)?, request)
+                }
+
+                Mechanism::Dilithium2 => {
+                    mechanisms::Dilithium2::serialize_key(&mut keystore(self, ctx)?, request)
+                }
+                Mechanism::Dilithium3 => {
+                    mechanisms::Dilithium3::serialize_key(&mut keystore(self, ctx)?, request)
+                }
+
                 _ => Err(Error::MechanismNotAvailable),
             }
             .map(Reply::SerializeKey),
@@ -611,6 +672,13 @@ impl<P: Platform> ServiceResources<P> {
                     mechanisms::P256Prehashed::sign(&mut keystore(self, ctx)?, request)
                 }
                 Mechanism::Totp => mechanisms::Totp::sign(&mut keystore(self, ctx)?, request),
+
+                Mechanism::Dilithium2 => {
+                    mechanisms::Dilithium2::sign(&mut keystore(self, ctx)?, request)
+                }
+                Mechanism::Dilithium3 => {
+                    mechanisms::Dilithium2::sign(&mut keystore(self, ctx)?, request)
+                }
                 _ => Err(Error::MechanismNotAvailable),
             }
             .map(Reply::Sign),
@@ -631,6 +699,12 @@ impl<P: Platform> ServiceResources<P> {
             Request::Verify(request) => match request.mechanism {
                 Mechanism::Ed255 => mechanisms::Ed255::verify(&mut keystore(self, ctx)?, request),
                 Mechanism::P256 => mechanisms::P256::verify(&mut keystore(self, ctx)?, request),
+                Mechanism::Dilithium2 => {
+                    mechanisms::Dilithium2::verify(&mut keystore(self, ctx)?, request)
+                }
+                Mechanism::Dilithium3 => {
+                    mechanisms::Dilithium2::verify(&mut keystore(self, ctx)?, request)
+                }
                 _ => Err(Error::MechanismNotAvailable),
             }
             .map(Reply::Verify),

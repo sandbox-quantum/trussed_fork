@@ -44,6 +44,7 @@ sha2 = { version = "0.10", default-features = false }
 
 # PQC algorithm from PQClean
 pqcrypto-kyber = "0.8.1"
+pqcrypto-dilithium = "0.5.0"
 pqcrypto-traits = "=0.3.5"
 
 # ours
@@ -107,6 +108,8 @@ default-mechanisms = [
     "kyber512",
     "kyber768",
     "kyber1024",
+    "dilithium2",
+    "dilithium3",
 ]
 aes256-cbc = []
 chacha8-poly1305 = []
@@ -124,6 +127,8 @@ trng = ["sha-1"]
 kyber512 = []
 kyber768 = []
 kyber1024 = []
+dilithium2 = []
+dilithium3 = []
 
 # syscalls
 default-syscalls = ["counter-client", "crypto-client-attest"]

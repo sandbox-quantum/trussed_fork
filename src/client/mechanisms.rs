@@ -498,8 +498,7 @@ pub trait X255: CryptoClient {
     }
 }
 
-
-// #[cfg(feature = "kyber512")]
+#[cfg(feature = "kyber512")]
 impl<S: Syscall, E> Kyber512 for ClientImplementation<S, E> {}
 
 pub trait Kyber512: CryptoClient {
@@ -542,8 +541,7 @@ pub trait Kyber512: CryptoClient {
     }
 }
 
-
-// #[cfg(feature = "kyber768")]
+#[cfg(feature = "kyber768")]
 impl<S: Syscall, E> Kyber768 for ClientImplementation<S, E> {}
 
 pub trait Kyber768: CryptoClient {
@@ -586,8 +584,7 @@ pub trait Kyber768: CryptoClient {
     }
 }
 
-
-// #[cfg(feature = "kyber1024")]
+#[cfg(feature = "kyber1024")]
 impl<S: Syscall, E> Kyber1024 for ClientImplementation<S, E> {}
 
 pub trait Kyber1024: CryptoClient {
@@ -626,6 +623,91 @@ pub trait Kyber1024: CryptoClient {
             private_key,
             ciphertext,
             StorageAttributes::new().set_persistence(persistence),
+        )
+    }
+}
+
+#[cfg(feature = "dilithium2")]
+impl<S: Syscall, E> Dilithium2 for ClientImplementation<S, E> {}
+
+pub trait Dilithium2: CryptoClient {
+    fn generate_dilithium2_keypair(
+        &mut self,
+        sk_persistence: Location,
+        pk_persistence: Location,
+    ) -> ClientResult<'_, reply::GenerateKeyPair, Self> {
+        self.generate_keypair(
+            Mechanism::Dilithium2,
+            StorageAttributes::new().set_persistence(sk_persistence),
+            StorageAttributes::new().set_persistence(pk_persistence),
+        )
+    }
+
+    fn sign_dilithium2(
+        &mut self,
+        private_key: KeyId,
+        message: &[u8],
+    ) -> ClientResult<'_, reply::Sign, Self> {
+        self.sign(
+            Mechanism::Dilithium2,
+            private_key,
+            message,
+            SignatureSerialization::Raw,
+        )
+    }
+
+    fn verify_dilithium2(
+        &mut self,
+        public_key: KeyId,
+        message: &[u8],
+        signature: &[u8],
+    ) -> ClientResult<'_, reply::Verify, Self> {
+        self.verify(
+            Mechanism::Dilithium2,
+            public_key,
+            message,
+            signature,
+            SignatureSerialization::Raw,
+        )
+    }
+}
+
+#[cfg(feature = "dilithium3")]
+impl<S: Syscall, E> Dilithium3 for ClientImplementation<S, E> {}
+
+pub trait Dilithium3: CryptoClient {
+    fn generate_dilithium3_keypair(
+        &mut self,
+        sk_persistence: Location,
+        pk_persistence: Location,
+    ) -> ClientResult<'_, reply::GenerateKeyPair, Self> {
+        self.generate_keypair(
+            Mechanism::Dilithium3,
+            StorageAttributes::new().set_persistence(sk_persistence),
+            StorageAttributes::new().set_persistence(pk_persistence),
+        )
+    }
+
+    fn sign_dilithium3(
+        &mut self,
+        private_key: KeyId,
+        message: &[u8],
+    ) -> ClientResult<'_, reply::Sign, Self> {
+        self.sign(Mechanism::Dilithium3, private_key, message, SignatureSerialization::Raw)
+    }
+
+    fn verify_dilithium3(
+        &mut self,
+        public_key: KeyId,
+        message: &[u8],
+        signature: &[u8],
+    ) -> ClientResult<'_, reply::Verify, Self> {
+        self.verify(
+            Mechanism::Dilithium3,
+            public_key,
+            message,
+            signature,
+            SignatureSerialization::Raw,
         )
     }
 }
