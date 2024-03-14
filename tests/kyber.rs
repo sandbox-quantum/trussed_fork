@@ -1,10 +1,10 @@
 #![cfg(feature = "virt")]
 
-use std::println;
-
+use trussed::api::reply::{Decap, Encap, GenerateKeyPair};
 use trussed::client::mechanisms::{Kyber1024, Kyber512, Kyber768};
 use trussed::client::CryptoClient;
-use trussed::types::{KeySerialization, Mechanism, StorageAttributes};
+use trussed::client::HmacSha256;
+use trussed::types::{KeySerialization, Mechanism};
 use trussed::{syscall, try_syscall};
 
 mod client;
@@ -14,18 +14,20 @@ use trussed::types::Location::*;
 #[test]
 fn kyber512() {
     client::get(|client| {
-        let (sk, pk) = syscall!(client.generate_kyber512_keypair(Internal, Volatile));
+        let keypair: GenerateKeyPair =
+            syscall!(client.generate_kyber512_keypair(Internal, Volatile));
+        let (sk, pk) = (keypair.private_key, keypair.public_key);
 
-        let (ciphertext, secret1) = syscall!(client.encap_kyber512(pk, Volatile));
+        let encap: Encap = syscall!(client.encap_kyber512(pk, Volatile));
+        let (ciphertext, secret1) = (encap.ciphertext, encap.shared_secret);
 
-        let secret2 = syscall!(client.decap_kyber512(sk, ciphertext, Volatile));
+        let decap: Decap = syscall!(client.decap_kyber512(sk, ciphertext, Volatile));
+        let secret2 = decap.shared_secret;
 
         // Trussed® won't give out secrets, but lets us use them
         let derivative1 = syscall!(client.sign_hmacsha256(secret1, &[])).signature;
         let derivative2 = syscall!(client.sign_hmacsha256(secret2, &[])).signature;
-        assert_neq!(derivative1, derivative2);
-        println!("{:?}", derivative1);
-        println!("{:?}", derivative2);
+        assert_eq!(derivative1, derivative2);
 
         assert!(try_syscall!(client.serialize_key(
             Mechanism::SharedSecret,
@@ -41,18 +43,20 @@ fn kyber512() {
 #[test]
 fn kyber768() {
     client::get(|client| {
-        let (sk, pk) = syscall!(client.generate_kyber768_keypair(Internal, Volatile));
+        let keypair: GenerateKeyPair =
+            syscall!(client.generate_kyber768_keypair(Internal, Volatile));
+        let (sk, pk) = (keypair.private_key, keypair.public_key);
 
-        let (ciphertext, secret1) = syscall!(client.encap_kyber768(pk, Volatile));
+        let encap: Encap = syscall!(client.encap_kyber768(pk, Volatile));
+        let (ciphertext, secret1) = (encap.ciphertext, encap.shared_secret);
 
-        let secret2 = syscall!(client.decap_kyber768(sk, ciphertext, Volatile));
+        let decap: Decap = syscall!(client.decap_kyber768(sk, ciphertext, Volatile));
+        let secret2 = decap.shared_secret;
 
         // Trussed® won't give out secrets, but lets us use them
         let derivative1 = syscall!(client.sign_hmacsha256(secret1, &[])).signature;
         let derivative2 = syscall!(client.sign_hmacsha256(secret2, &[])).signature;
-        assert_neq!(derivative1, derivative2);
-        println!("{:?}", derivative1);
-        println!("{:?}", derivative2);
+        assert_eq!(derivative1, derivative2);
 
         assert!(try_syscall!(client.serialize_key(
             Mechanism::SharedSecret,
@@ -68,18 +72,20 @@ fn kyber768() {
 #[test]
 fn kyber1024() {
     client::get(|client| {
-        let (sk, pk) = syscall!(client.generate_kyber1024_keypair(Internal, Volatile));
+        let keypair: GenerateKeyPair =
+            syscall!(client.generate_kyber1024_keypair(Internal, Volatile));
+        let (sk, pk) = (keypair.private_key, keypair.public_key);
 
-        let (ciphertext, secret1) = syscall!(client.encap_kyber1024(pk, Volatile));
+        let encap: Encap = syscall!(client.encap_kyber1024(pk, Volatile));
+        let (ciphertext, secret1) = (encap.ciphertext, encap.shared_secret);
 
-        let secret2 = syscall!(client.decap_kyber1024(sk, ciphertext, Volatile));
+        let decap: Decap = syscall!(client.decap_kyber1024(sk, ciphertext, Volatile));
+        let secret2 = decap.shared_secret;
 
         // Trussed® won't give out secrets, but lets us use them
         let derivative1 = syscall!(client.sign_hmacsha256(secret1, &[])).signature;
         let derivative2 = syscall!(client.sign_hmacsha256(secret2, &[])).signature;
-        assert_neq!(derivative1, derivative2);
-        println!("{:?}", derivative1);
-        println!("{:?}", derivative2);
+        assert_eq!(derivative1, derivative2);
 
         assert!(try_syscall!(client.serialize_key(
             Mechanism::SharedSecret,
