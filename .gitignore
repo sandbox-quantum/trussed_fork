@@ -2,3 +2,4 @@
 Cargo.lock
 **/*.bin
 /pkcs11v3
+**/.DS_Store
