@@ -450,6 +450,11 @@ pub enum Mechanism {
     Rsa2048Pkcs1v15,
     Rsa3072Pkcs1v15,
     Rsa4096Pkcs1v15,
+
+    // Post-quantum cryptography algorithms
+    Dilithium2,
+    Dilithium3,
+    Dilithium5,
 }
 
 pub type MediumData = Bytes<MAX_MEDIUM_DATA_LENGTH>;
