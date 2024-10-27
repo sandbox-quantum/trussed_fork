@@ -153,3 +153,6 @@ test-attestation-cert-ids = []
 [package.metadata.docs.rs]
 features = ["serde-extensions", "virt"]
 rustdoc-args = ["--cfg", "docsrs"]
+
+[patch.crates-io]
+cosey = { path = "../cosey" }
