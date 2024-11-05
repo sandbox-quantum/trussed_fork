@@ -76,7 +76,7 @@ cfg_if::cfg_if! {
 // the internal Trussed serialization that adds flags and such
 pub const MAX_SERIALIZED_KEY_LENGTH: usize = MAX_KEY_MATERIAL_LENGTH + 4;
 // 30 bytes are added by CBOR serialization of a FullCredential
-pub const MAX_MESSAGE_LENGTH: usize = MAX_FIDO_WRAPPED_KEY_LENGTH + 30;
+pub const MAX_MESSAGE_LENGTH: usize = MAX_FIDO_WRAPPED_KEY_LENGTH + 30 + 2031 + 32 + 37; // TODO: update this to be different 
 
 pub const MAX_USER_ATTRIBUTE_LENGTH: usize = 256;
 
