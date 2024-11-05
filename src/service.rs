@@ -942,7 +942,7 @@ impl<P: Platform, D: Dispatch> Service<P, D> {
                     .platform
                     .user_interface()
                     .set_status(ui::Status::Processing);
-                // #[cfg(test)] println!("service got request: {:?}", &request);
+                info_now!("service got request: {:?}", &request);
 
                 // resources.currently_serving = ep.client_id.clone();
                 let reply_result = if ep.backends.is_empty() {

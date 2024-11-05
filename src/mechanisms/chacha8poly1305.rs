@@ -179,7 +179,9 @@ impl WrapKey for super::Chacha8Poly1305 {
         // TODO: need to check both secret and private keys
         let serialized_key = keystore.load_key(key::Secrecy::Secret, None, &request.key)?;
 
-        let message = Message::from_slice(&serialized_key.serialize()).unwrap();
+        let serialized = serialized_key.serialize();
+        let message = Message::from_slice(&serialized).unwrap();
+        debug_now!("Serialized key length: {}", &serialized.len());
 
         let encryption_request = request::Encrypt {
             mechanism: Mechanism::Chacha8Poly1305,
@@ -193,6 +195,7 @@ impl WrapKey for super::Chacha8Poly1305 {
         let wrapped_key =
             crate::postcard_serialize_bytes(&encryption_reply).map_err(|_| Error::CborError)?;
 
+        debug_now!("Wrapped key length: {}", wrapped_key.len());
         Ok(reply::WrapKey { wrapped_key })
     }
 }
